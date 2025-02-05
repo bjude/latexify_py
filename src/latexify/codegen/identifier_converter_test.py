@@ -28,13 +28,13 @@ from latexify.codegen import identifier_converter
         ("foo", True, True, True, (r"\mathrm{foo}", False)),
         ("foo", True, False, True, (r"foo", False)),
         ("aa", False, True, False, (r"\mathrm{aa}", False)),
-        ("a_a", False, True, False, (r"\mathrm{a_a}", False)),
-        ("a_1", False, True, False, (r"\mathrm{a_1}", False)),
+        ("a_a", False, True, False, (r"\mathrm{a_{a}}", False)),
+        ("a_1", False, True, False, (r"\mathrm{a_{1}}", False)),
         ("alpha", True, False, False, (r"\alpha", True)),
-        ("alpha_1", True, False, False, (r"\alpha_1", False)),
-        ("x_alpha", True, False, False, (r"x_\alpha", False)),
+        ("alpha_1", True, False, False, (r"\alpha_{1}", False)),
+        ("x_alpha", True, False, False, (r"x_{\alpha}", False)),
         ("x_alpha_beta", True, False, False, (r"x_{\alpha_{\beta}}", False)),
-        ("alpha_beta", True, False, False, (r"\alpha_\beta", False)),
+        ("alpha_beta", True, False, False, (r"\alpha_{\beta}", False)),
     ],
 )
 def test_identifier_converter(

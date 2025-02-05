@@ -81,13 +81,8 @@ class IdentifierConverter:
                 ).convert(n)[0]
                 for n in name.split("_")
             ]
-            if name.count("_") == 1:
-                # One underscore, no need to wrap subsequent subscripts in braces
-                name = "_".join(elems)
-            else:
-                # Multi-layer subscripts require wrapping each subscript in nesting
-                # braces
-                name = "_{".join(elems) + "}" * (len(elems) - 1)
+            # Wrap sub identifiers in nested braces
+            name = "_{".join(elems) + "}" * (len(elems) - 1)
 
         if self._use_math_symbols and name in expression_rules.MATH_SYMBOLS:
             return "\\" + name, True
