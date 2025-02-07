@@ -58,20 +58,11 @@ class IdentifierConverter:
         if not self._escape_underscores and "_" in name:
             # Check if we are going to generate an invalid Latex string. Better to raise an
             # exception here than have the resulting Latex fail to compile/display
-            if "__" in name:
+            name_splits = name.split("_")
+            if not all(name_splits):
                 raise ValueError(
-                    f'Identifier "{name}" has a double underscore will result in '
-                    "invalid Latex when underscores are not escaped"
-                )
-            if name.startswith("_"):
-                raise ValueError(
-                    f'Identifier "{name}" starts with an underscore will result in '
-                    "invalid Latex when underscores are not escaped"
-                )
-            if name.endswith("_"):
-                raise ValueError(
-                    f'Identifier "{name}" ends with an underscore will result in '
-                    "invalid Latex when underscores are not escaped"
+                    "Neither preceding/trailing underscores nor double underscores is allowed "
+                    f"by the `escape_underscores` option, but got: {name}"
                 )
             elems = [
                 IdentifierConverter(
@@ -79,7 +70,7 @@ class IdentifierConverter:
                     use_mathrm=False,
                     escape_underscores=True,
                 ).convert(n)[0]
-                for n in name.split("_")
+                for n in name_splits
             ]
             # Wrap sub identifiers in nested braces
             name = "_{".join(elems) + "}" * (len(elems) - 1)
