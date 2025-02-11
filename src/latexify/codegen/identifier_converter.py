@@ -33,8 +33,8 @@ class IdentifierConverter:
                 appropriate LaTeX command.
             use_mathrm: Whether to wrap the resulting expression by \mathrm, if
                 applicable.
-            escape_underscores: Whether to prefix any underscores in identifiers with '\\',
-                disable to allow subscripts in generated latex
+            escape_underscores: Whether to prefix any underscores in identifiers with
+                '\\', disable to allow subscripts in generated latex.
         """
         self._use_math_symbols = use_math_symbols
         self._use_mathrm = use_mathrm
@@ -52,17 +52,18 @@ class IdentifierConverter:
                 - is_single_character: Whether `latex` can be treated as a single
                     character or not.
         Raises:
-            LatexifyError: Resulting latex is not valid. This most likely occurs where the
-            symbol starts or ends with an underscore, and escape_underscores=False.
+            LatexifyError: Resulting latex is not valid. This most likely occurs where
+            the symbol starts or ends with an underscore, and escape_underscores=False.
         """
         if not self._escape_underscores and "_" in name:
-            # Check if we are going to generate an invalid Latex string. Better to raise an
-            # exception here than have the resulting Latex fail to compile/display
+            # Check if we are going to generate an invalid Latex string. Better to
+            # raise an exception here than have the resulting Latex fail to
+            # compile/display
             name_splits = name.split("_")
             if not all(name_splits):
                 raise ValueError(
-                    "Neither preceding/trailing underscores nor double underscores is allowed "
-                    f"by the `escape_underscores` option, but got: {name}"
+                    "Neither preceding/trailing underscores nor double underscores is "
+                    f"allowed by the `escape_underscores` option, but got: {name}"
                 )
             elems = [
                 IdentifierConverter(
