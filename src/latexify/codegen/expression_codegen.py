@@ -17,12 +17,15 @@ class ExpressionCodegen(ast.NodeVisitor):
     _bin_op_rules: dict[type[ast.operator], expression_rules.BinOpRule]
     _compare_ops: dict[type[ast.cmpop], str]
 
+    _remove_multiply_symbol: bool
+
     def __init__(
         self,
         *,
         use_math_symbols: bool = False,
         use_set_symbols: bool = False,
         escape_underscores: bool = True,
+        remove_multiply_symbol: bool = True,
     ) -> None:
         """Initializer.
 
@@ -45,6 +48,7 @@ class ExpressionCodegen(ast.NodeVisitor):
             if use_set_symbols
             else expression_rules.COMPARE_OPS
         )
+        self._remove_multiply_symbol = remove_multiply_symbol
 
     def generic_visit(self, node: ast.AST) -> str:
         raise exceptions.LatexifyNotSupportedError(
@@ -636,7 +640,9 @@ class ExpressionCodegen(ast.NodeVisitor):
         rhs = self._wrap_binop_operand(node.right, prec, rule.operand_right)
 
         if type(node.op) in [ast.Mult, ast.MatMult]:
-            if self._should_remove_multiply_op(lhs, rhs, node.left, node.right):
+            if self._remove_multiply_symbol and self._should_remove_multiply_op(
+                lhs, rhs, node.left, node.right
+            ):
                 return f"{rule.latex_left}{lhs} {rhs}{rule.latex_right}"
 
         return f"{rule.latex_left}{lhs}{rule.latex_middle}{rhs}{rule.latex_right}"
