@@ -95,7 +95,9 @@ class FunctionCodegen(ast.NodeVisitor):
                 )
 
         # Function signature: f(x, ...)
-        signature_str = name_str + "(" + ", ".join(arg_strs) + ")"
+        signature_str = name_str
+        if len(arg_strs) > 0:
+            signature_str += "(" + ", ".join(arg_strs) + ")"
 
         # Function definition: f(x, ...) \triangleq ...
         return_str = self.visit(return_stmt)
