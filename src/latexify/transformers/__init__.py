@@ -6,6 +6,7 @@ from latexify.transformers.docstring_remover import DocstringRemover
 from latexify.transformers.function_expander import FunctionExpander
 from latexify.transformers.identifier_replacer import IdentifierReplacer
 from latexify.transformers.prefix_trimmer import PrefixTrimmer
+from latexify.transformers.self_stripper import SelfStripper
 
 __all__ = [
     "AssignmentReducer",
@@ -14,4 +15,5 @@ __all__ = [
     "FunctionExpander",
     "IdentifierReplacer",
     "PrefixTrimmer",
+    "SelfStripper",
 ]
