@@ -45,6 +45,8 @@ def get_latex(
     merged_config = cfg.Config.defaults().merge(config=config, **kwargs)
 
     # Obtains the source AST.
+    if hasattr(fn, "fget"):
+        fn = fn.fget
     tree = parser.parse_function(fn)
 
     # Mandatory AST Transformation.
