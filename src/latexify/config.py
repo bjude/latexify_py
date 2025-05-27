@@ -37,6 +37,7 @@ class Config:
     use_signature: bool
     escape_underscores: bool
     remove_multiply_symbol: bool
+    float_sig_figs: int | None
 
     def merge(self, *, config: Config | None = None, **kwargs) -> Config:
         """Merge configuration based on old configuration and field values.
@@ -79,4 +80,5 @@ class Config:
             use_signature=True,
             escape_underscores=True,
             remove_multiply_symbol=True,
+            float_sig_figs=None,
         )

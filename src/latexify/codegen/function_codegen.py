@@ -27,6 +27,7 @@ class FunctionCodegen(ast.NodeVisitor):
         use_set_symbols: bool = False,
         escape_underscores: bool = True,
         remove_multiply_symbol: bool = True,
+        float_sig_figs: int | None = None,
     ) -> None:
         """Initializer.
 
@@ -42,6 +43,7 @@ class FunctionCodegen(ast.NodeVisitor):
             use_set_symbols=use_set_symbols,
             escape_underscores=escape_underscores,
             remove_multiply_symbol=remove_multiply_symbol,
+            float_sig_figs=float_sig_figs,
         )
         self._identifier_converter = identifier_converter.IdentifierConverter(
             use_math_symbols=use_math_symbols, escape_underscores=escape_underscores

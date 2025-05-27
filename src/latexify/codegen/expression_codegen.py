@@ -18,6 +18,7 @@ class ExpressionCodegen(ast.NodeVisitor):
     _compare_ops: dict[type[ast.cmpop], str]
 
     _remove_multiply_symbol: bool
+    _float_sig_figs: int | None
 
     def __init__(
         self,
@@ -26,6 +27,7 @@ class ExpressionCodegen(ast.NodeVisitor):
         use_set_symbols: bool = False,
         escape_underscores: bool = True,
         remove_multiply_symbol: bool = True,
+        float_sig_figs: int | None = None,
     ) -> None:
         """Initializer.
 
@@ -49,6 +51,7 @@ class ExpressionCodegen(ast.NodeVisitor):
             else expression_rules.COMPARE_OPS
         )
         self._remove_multiply_symbol = remove_multiply_symbol
+        self._float_sig_figs = float_sig_figs
 
     def generic_visit(self, node: ast.AST) -> str:
         raise exceptions.LatexifyNotSupportedError(
@@ -461,12 +464,12 @@ class ExpressionCodegen(ast.NodeVisitor):
     # From Python 3.8
     def visit_Constant(self, node: ast.Constant) -> str:
         """Visit a Constant node."""
-        return codegen_utils.convert_constant(node.value)
+        return codegen_utils.convert_constant(node.value, self._float_sig_figs)
 
     # Until Python 3.7
     def visit_Num(self, node: ast.Num) -> str:
         """Visit a Num node."""
-        return codegen_utils.convert_constant(node.n)
+        return codegen_utils.convert_constant(node.n, self._float_sig_figs)
 
     # Until Python 3.7
     def visit_Str(self, node: ast.Str) -> str:

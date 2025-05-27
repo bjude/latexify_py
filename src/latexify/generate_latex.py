@@ -75,6 +75,7 @@ def get_latex(
             use_set_symbols=merged_config.use_set_symbols,
             escape_underscores=merged_config.escape_underscores,
             remove_multiply_symbol=merged_config.remove_multiply_symbol,
+            float_sig_figs=merged_config.float_sig_figs,
         ).visit(tree)
     elif style == Style.FUNCTION:
         return codegen.FunctionCodegen(
@@ -83,6 +84,7 @@ def get_latex(
             use_set_symbols=merged_config.use_set_symbols,
             escape_underscores=merged_config.escape_underscores,
             remove_multiply_symbol=merged_config.remove_multiply_symbol,
+            float_sig_figs=merged_config.float_sig_figs,
         ).visit(tree)
     elif style == Style.IPYTHON_ALGORITHMIC:
         return codegen.IPythonAlgorithmicCodegen(
@@ -90,6 +92,7 @@ def get_latex(
             use_set_symbols=merged_config.use_set_symbols,
             escape_underscores=merged_config.escape_underscores,
             remove_multiply_symbol=merged_config.remove_multiply_symbol,
+            float_sig_figs=merged_config.float_sig_figs,
         ).visit(tree)
 
     raise ValueError(f"Unrecognized style: {style}")
