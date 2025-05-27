@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import enum
 from collections.abc import Callable
 from typing import Any
@@ -20,7 +21,7 @@ class Style(enum.Enum):
 
 
 def get_latex(
-    fn: Callable[..., Any],
+    fn: Callable[..., Any] | ast.AST,
     *,
     style: Style = Style.FUNCTION,
     config: cfg.Config | None = None,
@@ -44,10 +45,13 @@ def get_latex(
     """
     merged_config = cfg.Config.defaults().merge(config=config, **kwargs)
 
-    # Obtains the source AST.
-    if hasattr(fn, "fget"):
-        fn = fn.fget
-    tree = parser.parse_function(fn)
+    if isinstance(fn, ast.AST):
+        tree = fn
+    else:
+        # Obtains the source AST.
+        if hasattr(fn, "fget"):
+            fn = fn.fget
+        tree = parser.parse_function(fn)
 
     # Mandatory AST Transformation.
     tree = transformers.AugAssignReplacer().visit(tree)

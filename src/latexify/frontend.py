@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 from collections.abc import Callable
 from typing import Any, overload
 
@@ -10,7 +11,7 @@ from latexify import ipython_wrappers
 
 @overload
 def algorithmic(
-    fn: Callable[..., Any], **kwargs: Any
+    fn: Callable[..., Any] | ast.AST, **kwargs: Any
 ) -> ipython_wrappers.LatexifiedAlgorithm: ...
 
 
@@ -21,7 +22,7 @@ def algorithmic(
 
 
 def algorithmic(
-    fn: Callable[..., Any] | None = None, **kwargs: Any
+    fn: Callable[..., Any] | ast.AST | None = None, **kwargs: Any
 ) -> (
     ipython_wrappers.LatexifiedAlgorithm
     | Callable[[Callable[..., Any]], ipython_wrappers.LatexifiedAlgorithm]
@@ -52,7 +53,7 @@ def algorithmic(
 
 @overload
 def function(
-    fn: Callable[..., Any], **kwargs: Any
+    fn: Callable[..., Any] | ast.AST, **kwargs: Any
 ) -> ipython_wrappers.LatexifiedFunction: ...
 
 
@@ -63,7 +64,7 @@ def function(
 
 
 def function(
-    fn: Callable[..., Any] | None = None, **kwargs: Any
+    fn: Callable[..., Any] | ast.AST | None = None, **kwargs: Any
 ) -> (
     ipython_wrappers.LatexifiedFunction
     | Callable[[Callable[..., Any]], ipython_wrappers.LatexifiedFunction]
@@ -94,7 +95,7 @@ def function(
 
 @overload
 def expression(
-    fn: Callable[..., Any], **kwargs: Any
+    fn: Callable[..., Any] | ast.AST, **kwargs: Any
 ) -> ipython_wrappers.LatexifiedFunction: ...
 
 
@@ -105,7 +106,7 @@ def expression(
 
 
 def expression(
-    fn: Callable[..., Any] | None = None, **kwargs: Any
+    fn: Callable[..., Any] | ast.AST | None = None, **kwargs: Any
 ) -> (
     ipython_wrappers.LatexifiedFunction
     | Callable[[Callable[..., Any]], ipython_wrappers.LatexifiedFunction]
