@@ -32,6 +32,7 @@ class Config:
     identifiers: dict[str, str] | None
     prefixes: set[str] | None
     reduce_assignments: bool
+    reduce_assignment_retained: set[str] | None
     use_math_symbols: bool
     use_set_symbols: bool
     use_signature: bool
@@ -75,6 +76,7 @@ class Config:
             identifiers=None,
             prefixes=None,
             reduce_assignments=False,
+            reduce_assignment_retained=None,
             use_math_symbols=False,
             use_set_symbols=False,
             use_signature=True,

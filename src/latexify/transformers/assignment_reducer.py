@@ -26,7 +26,11 @@ class AssignmentReducer(ast.NodeTransformer):
             return 4 + 3 * (2 + x)
     """
 
+    _retained: set[str]
     _assignments: dict[str, ast.expr] | None = None
+
+    def __init__(self, retained: set[str] | None = None):
+        self._retained = retained or set()
 
     # TODO(odashi):
     # Currently, this function does not care much about some expressions, e.g.,
@@ -63,6 +67,11 @@ class AssignmentReducer(ast.NodeTransformer):
             )
 
         return_transformed = self.visit(return_original)
+        retained = [
+            ast.Assign([ast.Name(name, ctx=ast.Load())], expr)
+            for name, expr in (self._assignments or {}).items()
+            if name in self._retained
+        ]
 
         # Pop stack
         self._assignments = parent_assignments
@@ -70,7 +79,7 @@ class AssignmentReducer(ast.NodeTransformer):
         return ast_utils.create_function_def(
             name=node.name,
             args=node.args,
-            body=[return_transformed],
+            body=retained + [return_transformed],
             decorator_list=node.decorator_list,
             returns=node.returns,
             type_params=type_params,
@@ -78,7 +87,7 @@ class AssignmentReducer(ast.NodeTransformer):
 
     def visit_Name(self, node: ast.Name) -> Any:
         """Visit a Name node."""
-        if self._assignments is not None:
+        if self._assignments is not None and node.id not in self._retained:
             return self._assignments.get(node.id, node)
 
         return node
