@@ -49,6 +49,27 @@ class FunctionExpander(ast.NodeTransformer):
         return ast.Call(**kwargs)
 
 
+def _make_unwrapper(func_name: str):
+    def _chain_unwrapper(expander: FunctionExpander, node: ast.Call) -> ast.Call:
+        args = []
+        assert len(node.keywords) == 0, (
+            "Recursive unrwrapping is not supported with keyword arguments"
+        )
+        for a in node.args:
+            a = expander.visit(a)
+            if (
+                isinstance(a, ast.Call)
+                and isinstance(a.func, ast.Name)
+                and a.func.id == func_name
+            ):
+                args += a.args
+            else:
+                args.append(a)
+        return ast.Call(ast.Name(func_name, ast.Load()), args=args, keywords=[])
+
+    return _chain_unwrapper
+
+
 def _atan2_expander(function_expander: FunctionExpander, node: ast.Call) -> ast.AST:
     _check_num_args(node, 2)
     return ast.Call(

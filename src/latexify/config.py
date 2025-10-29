@@ -29,6 +29,7 @@ class Config:
     """
 
     expand_functions: set[str] | None
+    recursive_unwrap_functions: set[str] | None
     identifiers: dict[str, str] | None
     prefixes: set[str] | None
     reduce_assignments: bool
@@ -73,6 +74,7 @@ class Config:
         """
         return Config(
             expand_functions=None,
+            recursive_unwrap_functions=None,
             identifiers=None,
             prefixes=None,
             reduce_assignments=False,

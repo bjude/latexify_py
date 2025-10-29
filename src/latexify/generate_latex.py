@@ -10,6 +10,7 @@ from typing import Any
 from latexify import codegen
 from latexify import config as cfg
 from latexify import parser, transformers
+from latexify.transformers.function_expander import _FUNCTION_EXPANDERS, _make_unwrapper
 
 
 class Style(enum.Enum):
@@ -69,6 +70,12 @@ def get_latex(
         ).visit(tree)
     if merged_config.expand_functions is not None:
         tree = transformers.FunctionExpander(merged_config.expand_functions).visit(tree)
+    if merged_config.recursive_unwrap_functions is not None:
+        for fn in merged_config.recursive_unwrap_functions:
+            _FUNCTION_EXPANDERS[fn] = _make_unwrapper(fn)
+        tree = transformers.FunctionExpander(
+            merged_config.recursive_unwrap_functions
+        ).visit(tree)
 
     # Generates LaTeX.
     if style == Style.ALGORITHMIC:
