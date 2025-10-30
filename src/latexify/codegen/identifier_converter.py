@@ -68,21 +68,32 @@ class IdentifierConverter:
             elems = [
                 IdentifierConverter(
                     use_math_symbols=self._use_math_symbols,
-                    use_mathrm=False,
+                    use_mathrm=self._use_mathrm,
                     escape_underscores=True,
                 ).convert(n)[0]
                 for n in name_splits
             ]
             # Wrap sub identifiers in nested braces
-            name = "_{".join(elems) + "}" * (len(elems) - 1)
+            name = "_(".join(elems) + ")" * (len(elems) - 1)
 
         if self._use_math_symbols and name in expression_rules.MATH_SYMBOLS:
-            return "\\" + name, True
-
-        if len(name) == 1 and name != "_":
             return name, True
 
-        escaped = name.replace("_", r"\_") if self._escape_underscores else name
-        wrapped = rf"\mathrm{{{escaped}}}" if self._use_mathrm else escaped
+        if len(name) == 1 and name != "_":
+            #if self._use_mathrm and not name.isnumeric():
+            #    name = f'"{name}"'
+            return name, True
+
+        if self._escape_underscores and not self._use_mathrm:
+            escaped = name.replace("_", r"\_") if self._escape_underscores else name
+        else:
+            escaped = name
+
+        if "_" not in name:
+            wrapped = f'"{escaped}"' if self._use_mathrm else escaped
+        elif self._escape_underscores or "_" not in name:
+            wrapped = f'"{escaped}"' if self._use_mathrm else escaped
+        else:
+            wrapped = escaped
 
         return wrapped, False
