@@ -24,10 +24,10 @@ def test_generic_visit() -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("()", r"\mathopen{}\left(  \mathclose{}\right)"),
-        ("(x,)", r"\mathopen{}\left( x \mathclose{}\right)"),
-        ("(x, y)", r"\mathopen{}\left( x, y \mathclose{}\right)"),
-        ("(x, y, z)", r"\mathopen{}\left( x, y, z \mathclose{}\right)"),
+        ("()", "(  )"),
+        ("(x,)", "( x )"),
+        ("(x, y)", "( x, y )"),
+        ("(x, y, z)", "( x, y, z )"),
     ],
 )
 def test_visit_tuple(code: str, latex: str) -> None:
@@ -39,10 +39,10 @@ def test_visit_tuple(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("[]", r"\mathopen{}\left[  \mathclose{}\right]"),
-        ("[x]", r"\mathopen{}\left[ x \mathclose{}\right]"),
-        ("[x, y]", r"\mathopen{}\left[ x, y \mathclose{}\right]"),
-        ("[x, y, z]", r"\mathopen{}\left[ x, y, z \mathclose{}\right]"),
+        ("[]", "[  ]"),
+        ("[x]", "[ x ]"),
+        ("[x, y]", "[ x, y ]"),
+        ("[x, y, z]", "[ x, y, z ]"),
     ],
 )
 def test_visit_list(code: str, latex: str) -> None:
@@ -56,9 +56,9 @@ def test_visit_list(code: str, latex: str) -> None:
     [
         # TODO(odashi): Support set().
         # ("set()", r"\mathopen{}\left\{  \mathclose{}\right\}"),
-        ("{x}", r"\mathopen{}\left\{ x \mathclose{}\right\}"),
-        ("{x, y}", r"\mathopen{}\left\{ x, y \mathclose{}\right\}"),
-        ("{x, y, z}", r"\mathopen{}\left\{ x, y, z \mathclose{}\right\}"),
+        ("{x}", "{ x }"),
+        ("{x, y}", "{ x, y }"),
+        ("{x, y, z}", "{ x, y, z }"),
     ],
 )
 def test_visit_set(code: str, latex: str) -> None:
@@ -70,44 +70,20 @@ def test_visit_set(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("[i for i in n]", r"\mathopen{}\left[ i \mid i \in n \mathclose{}\right]"),
-        (
-            "[i for i in n if i > 0]",
-            r"\mathopen{}\left[ i \mid"
-            r" \mathopen{}\left( i \in n \mathclose{}\right)"
-            r" \land \mathopen{}\left( i > 0 \mathclose{}\right)"
-            r" \mathclose{}\right]",
-        ),
+        ("[i for i in n]", "[ i mid(|) i in n ]"),
+        ("[i for i in n if i > 0]", "[ i mid(|) ( i in n ) and ( i > 0 ) ]"),
         (
             "[i for i in n if i > 0 if f(i)]",
-            r"\mathopen{}\left[ i \mid"
-            r" \mathopen{}\left( i \in n \mathclose{}\right)"
-            r" \land \mathopen{}\left( i > 0 \mathclose{}\right)"
-            r" \land \mathopen{}\left( f \mathopen{}\left("
-            r" i \mathclose{}\right) \mathclose{}\right)"
-            r" \mathclose{}\right]",
+            "[ i mid(|) ( i in n ) and ( i > 0 ) and ( f ( i ) ) ]",
         ),
-        (
-            "[i for k in n for i in k]",
-            r"\mathopen{}\left[ i \mid k \in n, i \in k" r" \mathclose{}\right]",
-        ),
+        ("[i for k in n for i in k]", "[ i mid(|) k in n, i in k ]"),
         (
             "[i for k in n for i in k if i > 0]",
-            r"\mathopen{}\left[ i \mid"
-            r" k \in n,"
-            r" \mathopen{}\left( i \in k \mathclose{}\right)"
-            r" \land \mathopen{}\left( i > 0 \mathclose{}\right)"
-            r" \mathclose{}\right]",
+            "[ i mid(|) k in n, ( i in k ) and ( i > 0 ) ]",
         ),
         (
             "[i for k in n if f(k) for i in k if i > 0]",
-            r"\mathopen{}\left[ i \mid"
-            r" \mathopen{}\left( k \in n \mathclose{}\right)"
-            r" \land \mathopen{}\left( f \mathopen{}\left("
-            r" k \mathclose{}\right) \mathclose{}\right),"
-            r" \mathopen{}\left( i \in k \mathclose{}\right)"
-            r" \land \mathopen{}\left( i > 0 \mathclose{}\right)"
-            r" \mathclose{}\right]",
+            "[ i mid(|) ( k in n ) and ( f ( k ) ), ( i in k ) and ( i > 0 ) ]",
         ),
     ],
 )
@@ -170,46 +146,36 @@ def test_visit_setcomp(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("foo(x)", r"\mathrm{foo} \mathopen{}\left( x \mathclose{}\right)"),
-        ("f(x)", r"f \mathopen{}\left( x \mathclose{}\right)"),
-        ("f(-x)", r"f \mathopen{}\left( -x \mathclose{}\right)"),
-        ("f(x + y)", r"f \mathopen{}\left( x + y \mathclose{}\right)"),
-        (
-            "f(f(x))",
-            r"f \mathopen{}\left("
-            r" f \mathopen{}\left( x \mathclose{}\right)"
-            r" \mathclose{}\right)",
-        ),
-        ("f(sqrt(x))", r"f \mathopen{}\left( \sqrt{ x } \mathclose{}\right)"),
-        ("f(sin(x))", r"f \mathopen{}\left( \sin x \mathclose{}\right)"),
-        ("f(factorial(x))", r"f \mathopen{}\left( x ! \mathclose{}\right)"),
-        ("f(x, y)", r"f \mathopen{}\left( x, y \mathclose{}\right)"),
-        ("sqrt(x)", r"\sqrt{ x }"),
-        ("sqrt(-x)", r"\sqrt{ -x }"),
-        ("sqrt(x + y)", r"\sqrt{ x + y }"),
-        ("sqrt(f(x))", r"\sqrt{ f \mathopen{}\left( x \mathclose{}\right) }"),
-        ("sqrt(sqrt(x))", r"\sqrt{ \sqrt{ x } }"),
-        ("sqrt(sin(x))", r"\sqrt{ \sin x }"),
-        ("sqrt(factorial(x))", r"\sqrt{ x ! }"),
-        ("sin(x)", r"\sin x"),
-        ("sin(-x)", r"\sin \mathopen{}\left( -x \mathclose{}\right)"),
-        ("sin(x + y)", r"\sin \mathopen{}\left( x + y \mathclose{}\right)"),
-        ("sin(f(x))", r"\sin f \mathopen{}\left( x \mathclose{}\right)"),
-        ("sin(sqrt(x))", r"\sin \sqrt{ x }"),
-        ("sin(sin(x))", r"\sin \sin x"),
-        ("sin(factorial(x))", r"\sin \mathopen{}\left( x ! \mathclose{}\right)"),
-        ("factorial(x)", r"x !"),
-        ("factorial(-x)", r"\mathopen{}\left( -x \mathclose{}\right) !"),
-        ("factorial(x + y)", r"\mathopen{}\left( x + y \mathclose{}\right) !"),
-        (
-            "factorial(f(x))",
-            r"\mathopen{}\left("
-            r" f \mathopen{}\left( x \mathclose{}\right)"
-            r" \mathclose{}\right) !",
-        ),
-        ("factorial(sqrt(x))", r"\mathopen{}\left( \sqrt{ x } \mathclose{}\right) !"),
-        ("factorial(sin(x))", r"\mathopen{}\left( \sin x \mathclose{}\right) !"),
-        ("factorial(factorial(x))", r"\mathopen{}\left( x ! \mathclose{}\right) !"),
+        ("foo(x)", 'op("foo") ( x )'),
+        ("f(x)", "f ( x )"),
+        ("f(-x)", "f ( -x )"),
+        ("f(x + y)", "f ( x + y )"),
+        ("f(f(x))", "f ( f ( x ) )"),
+        ("f(sqrt(x))", "f ( sqrt( x ) )"),
+        ("f(sin(x))", "f ( sin x )"),
+        ("f(factorial(x))", "f ( x ! )"),
+        ("f(x, y)", "f ( x, y )"),
+        ("sqrt(x)", "sqrt( x )"),
+        ("sqrt(-x)", "sqrt( -x )"),
+        ("sqrt(x + y)", "sqrt( x + y )"),
+        ("sqrt(f(x))", "sqrt( f ( x ) )"),
+        ("sqrt(sqrt(x))", "sqrt( sqrt( x ) )"),
+        ("sqrt(sin(x))", "sqrt( sin x )"),
+        ("sqrt(factorial(x))", "sqrt( x ! )"),
+        ("sin(x)", "sin x"),
+        ("sin(-x)", "sin ( -x )"),
+        ("sin(x + y)", "sin ( x + y )"),
+        ("sin(f(x))", "sin f ( x )"),
+        ("sin(sqrt(x))", "sin sqrt( x )"),
+        ("sin(sin(x))", "sin sin x"),
+        ("sin(factorial(x))", "sin ( x ! )"),
+        ("factorial(x)", "x !"),
+        ("factorial(-x)", "( -x ) !"),
+        ("factorial(x + y)", "( x + y ) !"),
+        ("factorial(f(x))", "( f ( x ) ) !"),
+        ("factorial(sqrt(x))", "( sqrt( x ) ) !"),
+        ("factorial(sin(x))", "( sin x ) !"),
+        ("factorial(factorial(x))", "( x ! ) !"),
     ],
 )
 def test_visit_call(code: str, latex: str) -> None:
@@ -1154,82 +1120,42 @@ def test_pinv(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "left,right,latex",
     [
-        ("2", "3", r"2 \cdot 3"),
+        ("2", "3", "2 dot.op 3"),
         ("2", "y", "2 y"),
-        ("2", "beta", r"2 \beta"),
-        ("2", "bar", r"2 \mathrm{bar}"),
-        ("2", "g(y)", r"2 g \mathopen{}\left( y \mathclose{}\right)"),
-        ("2", "(u + v)", r"2 \mathopen{}\left( u + v \mathclose{}\right)"),
-        ("x", "3", r"x \cdot 3"),
+        ("2", "beta", "2 beta"),
+        ("2", "bar", '2 "bar"'),
+        ("2", "g(y)", "2 g ( y )"),
+        ("2", "(u + v)", "2 ( u + v )"),
+        ("x", "3", "x dot.op 3"),
         ("x", "y", "x y"),
-        ("x", "beta", r"x \beta"),
-        ("x", "bar", r"x \cdot \mathrm{bar}"),
-        ("x", "g(y)", r"x \cdot g \mathopen{}\left( y \mathclose{}\right)"),
-        ("x", "(u + v)", r"x \cdot \mathopen{}\left( u + v \mathclose{}\right)"),
-        ("alpha", "3", r"\alpha \cdot 3"),
-        ("alpha", "y", r"\alpha y"),
-        ("alpha", "beta", r"\alpha \beta"),
-        ("alpha", "bar", r"\alpha \cdot \mathrm{bar}"),
-        ("alpha", "g(y)", r"\alpha \cdot g \mathopen{}\left( y \mathclose{}\right)"),
-        (
-            "alpha",
-            "(u + v)",
-            r"\alpha \cdot \mathopen{}\left( u + v \mathclose{}\right)",
-        ),
-        ("foo", "3", r"\mathrm{foo} \cdot 3"),
-        ("foo", "y", r"\mathrm{foo} \cdot y"),
-        ("foo", "beta", r"\mathrm{foo} \cdot \beta"),
-        ("foo", "bar", r"\mathrm{foo} \cdot \mathrm{bar}"),
-        (
-            "foo",
-            "g(y)",
-            r"\mathrm{foo} \cdot g \mathopen{}\left( y \mathclose{}\right)",
-        ),
-        (
-            "foo",
-            "(u + v)",
-            r"\mathrm{foo} \cdot \mathopen{}\left( u + v \mathclose{}\right)",
-        ),
-        ("f(x)", "3", r"f \mathopen{}\left( x \mathclose{}\right) \cdot 3"),
-        ("f(x)", "y", r"f \mathopen{}\left( x \mathclose{}\right) \cdot y"),
-        ("f(x)", "beta", r"f \mathopen{}\left( x \mathclose{}\right) \cdot \beta"),
-        (
-            "f(x)",
-            "bar",
-            r"f \mathopen{}\left( x \mathclose{}\right) \cdot \mathrm{bar}",
-        ),
-        (
-            "f(x)",
-            "g(y)",
-            r"f \mathopen{}\left( x \mathclose{}\right)"
-            r" \cdot g \mathopen{}\left( y \mathclose{}\right)",
-        ),
-        (
-            "f(x)",
-            "(u + v)",
-            r"f \mathopen{}\left( x \mathclose{}\right)"
-            r" \cdot \mathopen{}\left( u + v \mathclose{}\right)",
-        ),
-        ("(s + t)", "3", r"\mathopen{}\left( s + t \mathclose{}\right) \cdot 3"),
-        ("(s + t)", "y", r"\mathopen{}\left( s + t \mathclose{}\right) y"),
-        ("(s + t)", "beta", r"\mathopen{}\left( s + t \mathclose{}\right) \beta"),
-        (
-            "(s + t)",
-            "bar",
-            r"\mathopen{}\left( s + t \mathclose{}\right) \mathrm{bar}",
-        ),
-        (
-            "(s + t)",
-            "g(y)",
-            r"\mathopen{}\left( s + t \mathclose{}\right)"
-            r" g \mathopen{}\left( y \mathclose{}\right)",
-        ),
-        (
-            "(s + t)",
-            "(u + v)",
-            r"\mathopen{}\left( s + t \mathclose{}\right)"
-            r" \mathopen{}\left( u + v \mathclose{}\right)",
-        ),
+        ("x", "beta", "x beta"),
+        ("x", "bar", 'x dot.op "bar"'),
+        ("x", "g(y)", "x dot.op g ( y )"),
+        ("x", "(u + v)", "x dot.op ( u + v )"),
+        ("alpha", "3", "alpha dot.op 3"),
+        ("alpha", "y", "alpha y"),
+        ("alpha", "beta", "alpha beta"),
+        ("alpha", "bar", 'alpha dot.op "bar"'),
+        ("alpha", "g(y)", "alpha dot.op g ( y )"),
+        ("alpha", "(u + v)", "alpha dot.op ( u + v )"),
+        ("foo", "3", '"foo" dot.op 3'),
+        ("foo", "y", '"foo" dot.op y'),
+        ("foo", "beta", '"foo" dot.op beta'),
+        ("foo", "bar", '"foo" dot.op "bar"'),
+        ("foo", "g(y)", '"foo" dot.op g ( y )'),
+        ("foo", "(u + v)", '"foo" dot.op ( u + v )'),
+        ("f(x)", "3", "f ( x ) dot.op 3"),
+        ("f(x)", "y", "f ( x ) dot.op y"),
+        ("f(x)", "beta", "f ( x ) dot.op beta"),
+        ("f(x)", "bar", 'f ( x ) dot.op "bar"'),
+        ("f(x)", "g(y)", "f ( x ) dot.op g ( y )"),
+        ("f(x)", "(u + v)", "f ( x ) dot.op ( u + v )"),
+        ("(s + t)", "3", "( s + t ) dot.op 3"),
+        ("(s + t)", "y", "( s + t ) y"),
+        ("(s + t)", "beta", "( s + t ) beta"),
+        ("(s + t)", "bar", '( s + t ) "bar"'),
+        ("(s + t)", "g(y)", "( s + t ) g ( y )"),
+        ("(s + t)", "(u + v)", "( s + t ) ( u + v )"),
     ],
 )
 def test_remove_multiply(left: str, right: str, latex: str) -> None:
