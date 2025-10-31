@@ -13,14 +13,14 @@ from latexify.codegen.codegen_utils import convert_constant
 @pytest.mark.parametrize(
     "constant,latex",
     [
-        (None, r"\mathrm{None}"),
-        (True, r"\mathrm{True}"),
-        (False, r"\mathrm{False}"),
+        (None, '"None"'),
+        (True, '"True"'),
+        (False, '"False"'),
         (123, "123"),
         (456.789, "456.789"),
         (-3 + 4j, "(-3+4j)"),
-        ("string", r'\textrm{"string"}'),
-        (..., r"\cdots"),
+        ("string", "quote[string]"),
+        (..., "dots.c"),
     ],
 )
 def test_convert_constant(constant: Any, latex: str) -> None:

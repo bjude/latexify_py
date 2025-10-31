@@ -11,8 +11,8 @@ def test_get_latex_identifiers() -> None:
 
     identifiers = {"myfn": "f", "myvar": "x"}
 
-    latex_without_flag = r"\mathrm{myfn}(\mathrm{myvar}) = 3 \mathrm{myvar}"
-    latex_with_flag = r"f(x) = 3 x"
+    latex_without_flag = 'op("myfn")("myvar") = 3 "myvar"'
+    latex_with_flag = "f(x) = 3 x"
 
     assert generate_latex.get_latex(myfn) == latex_without_flag
     assert generate_latex.get_latex(myfn, identifiers=identifiers) == latex_with_flag
@@ -24,11 +24,11 @@ def test_get_latex_prefixes() -> None:
     def f(x):
         return abc.d + x.y.z.e
 
-    latex_without_flag = r"f(x) = \mathrm{abc}.d + x.y.z.e"
-    latex_with_flag1 = r"f(x) = d + x.y.z.e"
-    latex_with_flag2 = r"f(x) = \mathrm{abc}.d + y.z.e"
-    latex_with_flag3 = r"f(x) = \mathrm{abc}.d + z.e"
-    latex_with_flag4 = r"f(x) = d + e"
+    latex_without_flag = 'f(x) = "abc".d + x.y.z.e'
+    latex_with_flag1 = "f(x) = d + x.y.z.e"
+    latex_with_flag2 = 'f(x) = "abc".d + y.z.e'
+    latex_with_flag3 = 'f(x) = "abc".d + z.e'
+    latex_with_flag4 = "f(x) = d + e"
 
     assert generate_latex.get_latex(f) == latex_without_flag
     assert generate_latex.get_latex(f, prefixes=set()) == latex_without_flag
@@ -46,8 +46,8 @@ def test_get_latex_reduce_assignments() -> None:
         y = 3 * x
         return y
 
-    latex_without_flag = r"\begin{array}{l} y = 3 x \\ f(x) = y \end{array}"
-    latex_with_flag = r"f(x) = 3 x"
+    latex_without_flag = "y = 3 x \\ f(x) = y"
+    latex_with_flag = "f(x) = 3 x"
 
     assert generate_latex.get_latex(f) == latex_without_flag
     assert generate_latex.get_latex(f, reduce_assignments=False) == latex_without_flag
@@ -60,8 +60,8 @@ def test_get_latex_reduce_assignments_with_docstring() -> None:
         y = 3 * x
         return y
 
-    latex_without_flag = r"\begin{array}{l} y = 3 x \\ f(x) = y \end{array}"
-    latex_with_flag = r"f(x) = 3 x"
+    latex_without_flag = "y = 3 x \\ f(x) = y"
+    latex_with_flag = "f(x) = 3 x"
 
     assert generate_latex.get_latex(f) == latex_without_flag
     assert generate_latex.get_latex(f, reduce_assignments=False) == latex_without_flag
@@ -74,7 +74,7 @@ def test_get_latex_reduce_assignments_with_aug_assign() -> None:
         y *= x
         return y
 
-    latex_without_flag = r"\begin{array}{l} y = 3 \\ y = y x \\ f(x) = y \end{array}"
+    latex_without_flag = "y = 3 \\ y = y x \\ f(x) = y"
     latex_with_flag = r"f(x) = 3 x"
 
     assert generate_latex.get_latex(f) == latex_without_flag
@@ -86,8 +86,8 @@ def test_get_latex_use_math_symbols() -> None:
     def f(alpha):
         return alpha
 
-    latex_without_flag = r"f(\mathrm{alpha}) = \mathrm{alpha}"
-    latex_with_flag = r"f(\alpha) = \alpha"
+    latex_without_flag = 'f("alpha") = "alpha"'
+    latex_with_flag = "f(alpha) = alpha"
 
     assert generate_latex.get_latex(f) == latex_without_flag
     assert generate_latex.get_latex(f, use_math_symbols=False) == latex_without_flag
@@ -99,7 +99,7 @@ def test_get_latex_use_signature() -> None:
         return x
 
     latex_without_flag = "x"
-    latex_with_flag = r"f(x) = x"
+    latex_with_flag = "f(x) = x"
 
     assert generate_latex.get_latex(f) == latex_with_flag
     assert generate_latex.get_latex(f, use_signature=False) == latex_without_flag
@@ -110,8 +110,8 @@ def test_get_latex_use_set_symbols() -> None:
     def f(x, y):
         return x & y
 
-    latex_without_flag = r"f(x, y) = x \mathbin{\&} y"
-    latex_with_flag = r"f(x, y) = x \cap y"
+    latex_without_flag = 'f(x, y) = x op("&") y'
+    latex_with_flag = "f(x, y) = x inter y"
 
     assert generate_latex.get_latex(f) == latex_without_flag
     assert generate_latex.get_latex(f, use_set_symbols=False) == latex_without_flag
