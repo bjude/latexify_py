@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import re
+import sys
 
 from latexify import analyzers, ast_utils, exceptions
 from latexify.codegen import codegen_utils, expression_rules, identifier_converter
@@ -322,13 +323,19 @@ class ExpressionCodegen(ast.NodeVisitor):
 
         func_arg = node.args[0]
         power_arg = node.args[1]
-        if isinstance(power_arg, ast.Num):
+        if isinstance(power_arg, ast.Constant) or (
+            sys.version_info.minor < 8 and isinstance(power_arg, ast.Num)
+        ):
+            if isinstance(power_arg, ast.Constant):
+                power = power_arg.value
+            else:
+                power = power_arg.n
             if isinstance(func_arg, ast.Name):
-                return rf"\mathbf{{{func_arg.id}}}^{{{power_arg.n}}}"
+                return rf"\mathbf{{{func_arg.id}}}^{{{power}}}"
             elif isinstance(func_arg, ast.List):
                 matrix = self._generate_matrix(node)
                 if matrix is not None:
-                    return rf"{matrix}^{{{power_arg.n}}}"
+                    return rf"{matrix}^{{{power}}}"
         return None
 
     def _generate_inv(self, node: ast.Call) -> str | None:
