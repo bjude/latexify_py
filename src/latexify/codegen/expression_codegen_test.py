@@ -96,44 +96,17 @@ def test_visit_listcomp(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("{i for i in n}", r"\mathopen{}\left\{ i \mid i \in n \mathclose{}\right\}"),
-        (
-            "{i for i in n if i > 0}",
-            r"\mathopen{}\left\{ i \mid"
-            r" \mathopen{}\left( i \in n \mathclose{}\right)"
-            r" \land \mathopen{}\left( i > 0 \mathclose{}\right)"
-            r" \mathclose{}\right\}",
-        ),
-        (
-            "{i for i in n if i > 0 if f(i)}",
-            r"\mathopen{}\left\{ i \mid"
-            r" \mathopen{}\left( i \in n \mathclose{}\right)"
-            r" \land \mathopen{}\left( i > 0 \mathclose{}\right)"
-            r" \land \mathopen{}\left( f \mathopen{}\left("
-            r" i \mathclose{}\right) \mathclose{}\right)"
-            r" \mathclose{}\right\}",
-        ),
-        (
-            "{i for k in n for i in k}",
-            r"\mathopen{}\left\{ i \mid k \in n, i \in k" r" \mathclose{}\right\}",
-        ),
+        ("{i for i in n}", "{ i mid(|) i in n }"),
+        ("{i for i in n if i > 0}", "{ i mid(|) (i in n) and (i > 0) }"),
+        ("{i for i in n if i > 0 if f(i)}", "{ i mid(|) (i in n) and ( f(i) ) }"),
+        ("{i for k in n for i in k}", "{ i mid(|) k in n, i in k }"),
         (
             "{i for k in n for i in k if i > 0}",
-            r"\mathopen{}\left\{ i \mid"
-            r" k \in n,"
-            r" \mathopen{}\left( i \in k \mathclose{}\right)"
-            r" \land \mathopen{}\left( i > 0 \mathclose{}\right)"
-            r" \mathclose{}\right\}",
+            "{ i mid(|) k in n, ( i in k ) and ( i > 0 ) }",
         ),
         (
             "{i for k in n if f(k) for i in k if i > 0}",
-            r"\mathopen{}\left\{ i \mid"
-            r" \mathopen{}\left( k \in n \mathclose{}\right)"
-            r" \land \mathopen{}\left( f \mathopen{}\left("
-            r" k \mathclose{}\right) \mathclose{}\right),"
-            r" \mathopen{}\left( i \in k \mathclose{}\right)"
-            r" \land \mathopen{}\left( i > 0 \mathclose{}\right)"
-            r" \mathclose{}\right\}",
+            "{ i mid(|) ( k in n ) and ( f ( k ) ), ( i in k ) and ( i > 0 ) }",
         ),
     ],
 )
@@ -187,14 +160,9 @@ def test_visit_call(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("log(x)**2", r"\mathopen{}\left( \log x \mathclose{}\right)^{2}"),
-        ("log(x**2)", r"\log \mathopen{}\left( x^{2} \mathclose{}\right)"),
-        (
-            "log(x**2)**3",
-            r"\mathopen{}\left("
-            r" \log \mathopen{}\left( x^{2} \mathclose{}\right)"
-            r" \mathclose{}\right)^{3}",
-        ),
+        ("log(x)**2", "( log x )^(2)"),
+        ("log(x**2)", "log ( x^(2) )"),
+        ("log(x**2)**3", "( log ( x^(2) ) )^(3)"),
     ],
 )
 def test_visit_call_with_pow(code: str, latex: str) -> None:
@@ -207,114 +175,40 @@ def test_visit_call_with_pow(code: str, latex: str) -> None:
     "src_suffix,dest_suffix",
     [
         # No arguments
-        ("()", r" \mathopen{}\left( \mathclose{}\right)"),
+        ("()", " ( )"),
         # No comprehension
-        ("(x)", r" x"),
-        (
-            "([1, 2])",
-            r" \mathopen{}\left[ 1, 2 \mathclose{}\right]",
-        ),
-        (
-            "({1, 2})",
-            r" \mathopen{}\left\{ 1, 2 \mathclose{}\right\}",
-        ),
-        ("(f(x))", r" f \mathopen{}\left( x \mathclose{}\right)"),
+        ("(x)", " x"),
+        ("([1, 2])", " [ 1, 2 ]"),
+        ("({1, 2})", " { 1, 2 }"),
+        ("(f(x))", " f ( x )"),
         # Single comprehension
-        ("(i for i in x)", r"_{i \in x}^{} \mathopen{}\left({i}\mathclose{}\right)"),
-        (
-            "(i for i in [1, 2])",
-            r"_{i \in \mathopen{}\left[ 1, 2 \mathclose{}\right]}^{} "
-            r"\mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in {1, 2})",
-            r"_{i \in \mathopen{}\left\{ 1, 2 \mathclose{}\right\}}^{}"
-            r" \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in f(x))",
-            r"_{i \in f \mathopen{}\left( x \mathclose{}\right)}^{}"
-            r" \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(n))",
-            r"_{i = 0}^{n - 1} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(n + 1))",
-            r"_{i = 0}^{n} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(n + 2))",
-            r"_{i = 0}^{n + 1} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            # ast.parse() does not recognize negative integers.
-            "(i for i in range(n - -1))",
-            r"_{i = 0}^{n - -1 - 1} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(n - 1))",
-            r"_{i = 0}^{n - 2} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(n + m))",
-            r"_{i = 0}^{n + m - 1} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(n - m))",
-            r"_{i = 0}^{n - m - 1} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(3))",
-            r"_{i = 0}^{2} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(3 + 1))",
-            r"_{i = 0}^{3} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(3 + 2))",
-            r"_{i = 0}^{3 + 1} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(3 - 1))",
-            r"_{i = 0}^{3 - 2} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            # ast.parse() does not recognize negative integers.
-            "(i for i in range(3 - -1))",
-            r"_{i = 0}^{3 - -1 - 1} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(3 + m))",
-            r"_{i = 0}^{3 + m - 1} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(3 - m))",
-            r"_{i = 0}^{3 - m - 1} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(n, m))",
-            r"_{i = n}^{m - 1} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(1, m))",
-            r"_{i = 1}^{m - 1} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(n, 3))",
-            r"_{i = n}^{2} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "(i for i in range(n, m, k))",
-            r"_{i \in \mathrm{range} \mathopen{}\left( n, m, k \mathclose{}\right)}^{}"
-            r" \mathopen{}\left({i}\mathclose{}\right)",
-        ),
+        ("(i for i in x)", "_(i in x)^() (i)"),
+        ("(i for i in [1, 2])", "_(i in [ 1, 2 ])^() (i)"),
+        ("(i for i in {1, 2})", "_(i in { 1, 2 })^() (i)"),
+        ("(i for i in f(x))", "_(i in f ( x ))^() (i)"),
+        ("(i for i in range(n))", "_(i = 0)^(n - 1) (i)"),
+        ("(i for i in range(n + 1))", "_(i = 0)^(n) (i)"),
+        ("(i for i in range(n + 2))", "_(i = 0)^(n + 1) (i)"),
+        ("(i for i in range(n - -1))", "_(i = 0)^(n) (i)"),
+        ("(i for i in range(n - 1))", "_(i = 0)^(n - 2) (i)"),
+        ("(i for i in range(n + m))", "_(i = 0)^(n + m - 1) (i)"),
+        ("(i for i in range(n - m))", "_(i = 0)^(n - m - 1) (i)"),
+        ("(i for i in range(3))", "_(i = 0)^(2) (i)"),
+        ("(i for i in range(3 + 1))", "_(i = 0)^(3) (i)"),
+        ("(i for i in range(3 + 2))", "_(i = 0)^(4) (i)"),
+        ("(i for i in range(3 - 1))", "_(i = 0)^(1) (i)"),
+        ("(i for i in range(3 - -1))", "_(i = 0)^(3) (i)"),
+        ("(i for i in range(3 + m))", "_(i = 0)^(3 + m - 1) (i)"),
+        ("(i for i in range(3 - m))", "_(i = 0)^(3 - m - 1) (i)"),
+        ("(i for i in range(n, m))", "_(i = n)^(m - 1) (i)"),
+        ("(i for i in range(1, m))", "_(i = 1)^(m - 1) (i)"),
+        ("(i for i in range(n, 3))", "_(i = n)^(2) (i)"),
+        # FIXME(BJ): This could be done differently by specifying modulo = 0
+        ("(i for i in range(n, m, k))", '_(i in op("range") ( n, m, k ) )^() (i)'),
     ],
 )
 def test_visit_call_sum_prod(src_suffix: str, dest_suffix: str) -> None:
-    for src_fn, dest_fn in [("fsum", r"\sum"), ("sum", r"\sum"), ("prod", r"\prod")]:
+    for src_fn, dest_fn in [("fsum", "sum"), ("sum", "sum"), ("prod", "product")]:
         node = ast_utils.parse_expr(src_fn + src_suffix)
         assert isinstance(node, ast.Call)
         assert (
@@ -326,45 +220,28 @@ def test_visit_call_sum_prod(src_suffix: str, dest_suffix: str) -> None:
     "code,latex",
     [
         # 2 clauses
-        (
-            "sum(i for y in x for i in y)",
-            r"\sum_{y \in x}^{} \sum_{i \in y}^{} "
-            r"\mathopen{}\left({i}\mathclose{}\right)",
-        ),
+        ("sum(i for y in x for i in y)", "sum_(y in x)^() sum_(i in y)^() (i)"),
+        # 3 clauses
         (
             "sum(i for y in x for z in y for i in z)",
-            r"\sum_{y \in x}^{} \sum_{z \in y}^{} \sum_{i \in z}^{} "
-            r"\mathopen{}\left({i}\mathclose{}\right)",
+            "sum_(y in x)^() sum_(z in y)^() sum_(i in z)^() (i)",
+        ),
+        # 2 clauses
+        (
+            "prod(i for y in x for i in y)",
+            "product_(y in x)^() product_(i in y)^() (i)",
         ),
         # 3 clauses
         (
-            "prod(i for y in x for i in y)",
-            r"\prod_{y \in x}^{} \prod_{i \in y}^{} "
-            r"\mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
             "prod(i for y in x for z in y for i in z)",
-            r"\prod_{y \in x}^{} \prod_{z \in y}^{} \prod_{i \in z}^{} "
-            r"\mathopen{}\left({i}\mathclose{}\right)",
+            "product_(y in x)^() product_(z in y)^() product_(i in z)^() (i)",
         ),
         # reduce stop parameter
-        (
-            "sum(i for i in range(n+1))",
-            r"\sum_{i = 0}^{n} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "prod(i for i in range(n-1))",
-            r"\prod_{i = 0}^{n - 2} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
+        ("sum(i for i in range(n+1))", "sum_(i = 0)^(n) (i)"),
+        ("sum(i for i in range(n-1))", "sum_(i = 0)^(n - 2) (i)"),
         # reduce stop parameter
-        (
-            "sum(i for i in range(n+1))",
-            r"\sum_{i = 0}^{n} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
-        (
-            "prod(i for i in range(n-1))",
-            r"\prod_{i = 0}^{n - 2} \mathopen{}\left({i}\mathclose{}\right)",
-        ),
+        ("prod(i for i in range(n+1))", "product_(i = 0)^(n) (i)"),
+        ("prod(i for i in range(n-1))", "product_(i = 0)^(n - 2) (i)"),
     ],
 )
 def test_visit_call_sum_prod_multiple_comprehension(code: str, latex: str) -> None:
@@ -376,24 +253,15 @@ def test_visit_call_sum_prod_multiple_comprehension(code: str, latex: str) -> No
 @pytest.mark.parametrize(
     "src_suffix,dest_suffix",
     [
-        (
-            "(i for i in x if i < y)",
-            r"_{\mathopen{}\left( i \in x \mathclose{}\right) "
-            r"\land \mathopen{}\left( i < y \mathclose{}\right)}^{} "
-            r"\mathopen{}\left({i}\mathclose{}\right)",
-        ),
+        ("(i for i in x if i < y)", "_(( i in x ) and ( i < y))^() (i)"),
         (
             "(i for i in x if i < y if f(i))",
-            r"_{\mathopen{}\left( i \in x \mathclose{}\right)"
-            r" \land \mathopen{}\left( i < y \mathclose{}\right)"
-            r" \land \mathopen{}\left( f \mathopen{}\left("
-            r" i \mathclose{}\right) \mathclose{}\right)}^{}"
-            r" \mathopen{}\left({i}\mathclose{}\right)",
+            "_(( i in x ) and ( i < y ) and ( f ( i ) ))^() (i)",
         ),
     ],
 )
 def test_visit_call_sum_prod_with_if(src_suffix: str, dest_suffix: str) -> None:
-    for src_fn, dest_fn in [("sum", r"\sum"), ("prod", r"\prod")]:
+    for src_fn, dest_fn in [("sum", "sum"), ("prod", "product")]:
         node = ast_utils.parse_expr(src_fn + src_suffix)
         assert isinstance(node, ast.Call)
         assert (
@@ -404,29 +272,14 @@ def test_visit_call_sum_prod_with_if(src_suffix: str, dest_suffix: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        (
-            "x if x < y else y",
-            r"\left\{ \begin{array}{ll}"
-            r" x, & \mathrm{if} \ x < y \\"
-            r" y, & \mathrm{otherwise}"
-            r" \end{array} \right.",
-        ),
+        ("x if x < y else y", 'cases( x ","& "if" x < y, y ","& "otherwise")'),
         (
             "x if x < y else (y if y < z else z)",
-            r"\left\{ \begin{array}{ll}"
-            r" x, & \mathrm{if} \ x < y \\"
-            r" y, & \mathrm{if} \ y < z \\"
-            r" z, & \mathrm{otherwise}"
-            r" \end{array} \right.",
+            'cases( x ","& "if" x < y, y ","& "if" y < z, z ","& "otherwise")',
         ),
         (
             "x if x < y else (y if y < z else (z if z < w else w))",
-            r"\left\{ \begin{array}{ll}"
-            r" x, & \mathrm{if} \ x < y \\"
-            r" y, & \mathrm{if} \ y < z \\"
-            r" z, & \mathrm{if} \ z < w \\"
-            r" w, & \mathrm{otherwise}"
-            r" \end{array} \right.",
+            'cases( x ","& "if" x < y, y ","& "if" y < z, z ","& "if" z < w, w ","& "otherwise")',
         ),
     ],
 )
@@ -440,177 +293,139 @@ def test_if_then_else(code: str, latex: str) -> None:
     "code,latex",
     [
         # x op y
-        ("x**y", r"x^{y}"),
-        ("x * y", r"x y"),
-        ("x @ y", r"x y"),
-        ("x / y", r"\frac{x}{y}"),
-        ("x // y", r"\left\lfloor\frac{x}{y}\right\rfloor"),
-        ("x % y", r"x \mathbin{\%} y"),
-        ("x + y", r"x + y"),
-        ("x - y", r"x - y"),
-        ("x << y", r"x \ll y"),
-        ("x >> y", r"x \gg y"),
-        ("x & y", r"x \mathbin{\&} y"),
-        ("x ^ y", r"x \oplus y"),
-        ("x | y", R"x \mathbin{|} y"),
+        ("x**y", "x^(y)"),
+        ("x * y", "x y"),
+        ("x @ y", "x y"),
+        ("x / y", "frac(x, y)"),
+        ("x // y", "floor(frac(x, y))"),
+        ("x % y", "x op(%) y"),
+        ("x + y", "x + y"),
+        ("x - y", "x - y"),
+        ("x << y", "x << y"),
+        ("x >> y", "x >> y"),
+        ("x & y", "x op(&) y"),
+        ("x ^ y", "x plus.o y"),
+        ("x | y", "x op(|) y"),
         # (x op y) op z
-        ("(x**y)**z", r"\mathopen{}\left( x^{y} \mathclose{}\right)^{z}"),
-        ("(x * y) * z", r"x y z"),
-        ("(x @ y) @ z", r"x y z"),
-        ("(x / y) / z", r"\frac{\frac{x}{y}}{z}"),
-        (
-            "(x // y) // z",
-            r"\left\lfloor\frac{\left\lfloor\frac{x}{y}\right\rfloor}{z}\right\rfloor",
-        ),
-        ("(x % y) % z", r"x \mathbin{\%} y \mathbin{\%} z"),
-        ("(x + y) + z", r"x + y + z"),
-        ("(x - y) - z", r"x - y - z"),
-        ("(x << y) << z", r"x \ll y \ll z"),
-        ("(x >> y) >> z", r"x \gg y \gg z"),
-        ("(x & y) & z", r"x \mathbin{\&} y \mathbin{\&} z"),
-        ("(x ^ y) ^ z", r"x \oplus y \oplus z"),
-        ("(x | y) | z", r"x \mathbin{|} y \mathbin{|} z"),
+        ("(x**y)**z", "( x^(y) )^(z)"),
+        ("(x * y) * z", "x y z"),
+        ("(x @ y) @ z", "x y z"),
+        ("(x / y) / z", "frac(frac(x, y), z)"),
+        ("(x // y) // z", "floor(frac(floor(frac(x, y)), z))"),
+        ("(x % y) % z", "x op(%) y op(%) z"),
+        ("(x + y) + z", "x + y + z"),
+        ("(x - y) - z", "x - y - z"),
+        ("(x << y) << z", "x << y << z"),
+        ("(x >> y) >> z", "x >> y >> z"),
+        ("(x & y) & z", "x op(&) y op(&) z"),
+        ("(x ^ y) ^ z", "x plus.o y plus.o z"),
+        ("(x | y) | z", "x op(|) y (|) z"),
         # x op (y op z)
-        ("x**(y**z)", r"x^{y^{z}}"),
-        ("x * (y * z)", r"x y z"),
-        ("x @ (y @ z)", r"x y z"),
-        ("x / (y / z)", r"\frac{x}{\frac{y}{z}}"),
-        (
-            "x // (y // z)",
-            r"\left\lfloor\frac{x}{\left\lfloor\frac{y}{z}\right\rfloor}\right\rfloor",
-        ),
-        (
-            "x % (y % z)",
-            r"x \mathbin{\%} \mathopen{}\left( y \mathbin{\%} z \mathclose{}\right)",
-        ),
-        ("x + (y + z)", r"x + y + z"),
-        ("x - (y - z)", r"x - \mathopen{}\left( y - z \mathclose{}\right)"),
-        ("x << (y << z)", r"x \ll \mathopen{}\left( y \ll z \mathclose{}\right)"),
-        ("x >> (y >> z)", r"x \gg \mathopen{}\left( y \gg z \mathclose{}\right)"),
-        ("x & (y & z)", r"x \mathbin{\&} y \mathbin{\&} z"),
-        ("x ^ (y ^ z)", r"x \oplus y \oplus z"),
-        ("x | (y | z)", r"x \mathbin{|} y \mathbin{|} z"),
+        ("x**(y**z)", "x^(y^(z))"),
+        ("x * (y * z)", "x y z"),
+        ("x @ (y @ z)", "x y z"),
+        ("x / (y / z)", "frac(x, frac(y, z))"),
+        ("x // (y // z)", "floor(frac(x, floor(frac(y, z))))"),
+        ("x % (y % z)", "x op(%) ( y op(%) z )"),
+        ("x + (y + z)", "x + y + z"),
+        ("x - (y - z)", "x - ( y - z )"),
+        ("x << (y << z)", "x << ( y << z )"),
+        ("x >> (y >> z)", "x >> ( y >> z )"),
+        ("x & (y & z)", "x op(&) y op(&) z"),
+        ("x ^ (y ^ z)", "x plus.o y plus.o z"),
+        ("x | (y | z)", "x op(|) y op(|) z"),
         # x OP y op z
-        ("x**y * z", r"x^{y} z"),
-        ("x * y + z", r"x y + z"),
-        ("x @ y + z", r"x y + z"),
-        ("x / y + z", r"\frac{x}{y} + z"),
-        ("x // y + z", r"\left\lfloor\frac{x}{y}\right\rfloor + z"),
-        ("x % y + z", r"x \mathbin{\%} y + z"),
-        ("x + y << z", r"x + y \ll z"),
-        ("x - y << z", r"x - y \ll z"),
-        ("x << y & z", r"x \ll y \mathbin{\&} z"),
-        ("x >> y & z", r"x \gg y \mathbin{\&} z"),
-        ("x & y ^ z", r"x \mathbin{\&} y \oplus z"),
-        ("x ^ y | z", r"x \oplus y \mathbin{|} z"),
+        ("x**y * z", "x^(y) z"),
+        ("x * y + z", "x y + z"),
+        ("x @ y + z", "x y + z"),
+        ("x / y + z", "frac(x, y) + z"),
+        ("x // y + z", "floor(frac(x, y)) + z"),
+        ("x % y + z", "x op(%) y + z"),
+        ("x + y << z", "x + y << z"),
+        ("x - y << z", "x - y << z"),
+        ("x << y & z", "x << y op(&) z"),
+        ("x >> y & z", "x >> y op(&) z"),
+        ("x & y ^ z", "x op(&) y plus.o z"),
+        ("x ^ y | z", "x plus.o y op(|) z"),
         # x OP (y op z)
-        ("x**(y * z)", r"x^{y z}"),
-        ("x * (y + z)", r"x \cdot \mathopen{}\left( y + z \mathclose{}\right)"),
-        ("x @ (y + z)", r"x \cdot \mathopen{}\left( y + z \mathclose{}\right)"),
-        ("x / (y + z)", r"\frac{x}{y + z}"),
-        ("x // (y + z)", r"\left\lfloor\frac{x}{y + z}\right\rfloor"),
-        ("x % (y + z)", r"x \mathbin{\%} \mathopen{}\left( y + z \mathclose{}\right)"),
-        ("x + (y << z)", r"x + \mathopen{}\left( y \ll z \mathclose{}\right)"),
-        ("x - (y << z)", r"x - \mathopen{}\left( y \ll z \mathclose{}\right)"),
-        (
-            "x << (y & z)",
-            r"x \ll \mathopen{}\left( y \mathbin{\&} z \mathclose{}\right)",
-        ),
-        (
-            "x >> (y & z)",
-            r"x \gg \mathopen{}\left( y \mathbin{\&} z \mathclose{}\right)",
-        ),
-        (
-            "x & (y ^ z)",
-            r"x \mathbin{\&} \mathopen{}\left( y \oplus z \mathclose{}\right)",
-        ),
-        (
-            "x ^ (y | z)",
-            r"x \oplus \mathopen{}\left( y \mathbin{|} z \mathclose{}\right)",
-        ),
+        ("x**(y * z)", "x^(y z)"),
+        ("x * (y + z)", "x dot ( y + z )"),
+        ("x @ (y + z)", "x dot ( y + z )"),
+        ("x / (y + z)", "frac(x, y + z)"),
+        ("x // (y + z)", "floor(frac(x, y + z))"),
+        ("x % (y + z)", "x op(%) ( y + z )"),
+        ("x + (y << z)", "x + ( y << z )"),
+        ("x - (y << z)", "x - ( y << z )"),
+        ("x << (y & z)", "x << ( y op(&) z )"),
+        ("x >> (y & z)", "x >> ( y op(&) z )"),
+        ("x & (y ^ z)", "x op(&) ( y plus.o z )"),
+        ("x ^ (y | z)", "x plus.o ( y op(|) z )"),
         # x op y OP z
-        ("x * y**z", r"x y^{z}"),
-        ("x + y * z", r"x + y z"),
-        ("x + y @ z", r"x + y z"),
-        ("x + y / z", r"x + \frac{y}{z}"),
-        ("x + y // z", r"x + \left\lfloor\frac{y}{z}\right\rfloor"),
-        ("x + y % z", r"x + y \mathbin{\%} z"),
-        ("x << y + z", r"x \ll y + z"),
-        ("x << y - z", r"x \ll y - z"),
-        ("x & y << z", r"x \mathbin{\&} y \ll z"),
-        ("x & y >> z", r"x \mathbin{\&} y \gg z"),
-        ("x ^ y & z", r"x \oplus y \mathbin{\&} z"),
-        ("x | y ^ z", r"x \mathbin{|} y \oplus z"),
+        ("x * y**z", "x y^(z)"),
+        ("x + y * z", "x + y z"),
+        ("x + y @ z", "x + y z"),
+        ("x + y / z", "x + frac(y, z)"),
+        ("x + y // z", "x + floor(frac(y, z))"),
+        ("x + y % z", "x + y op(%) z"),
+        ("x << y + z", "x << y + z"),
+        ("x << y - z", "x << y - z"),
+        ("x & y << z", "x op(&) y << z"),
+        ("x & y >> z", "x op(&) y >> z"),
+        ("x ^ y & z", "x plus.o y op(&) z"),
+        ("x | y ^ z", "x op(|) y plus.o z"),
         # (x op y) OP z
-        ("(x * y)**z", r"\mathopen{}\left( x y \mathclose{}\right)^{z}"),
-        ("(x + y) * z", r"\mathopen{}\left( x + y \mathclose{}\right) z"),
-        ("(x + y) @ z", r"\mathopen{}\left( x + y \mathclose{}\right) z"),
-        ("(x + y) / z", r"\frac{x + y}{z}"),
-        ("(x + y) // z", r"\left\lfloor\frac{x + y}{z}\right\rfloor"),
-        ("(x + y) % z", r"\mathopen{}\left( x + y \mathclose{}\right) \mathbin{\%} z"),
-        ("(x << y) + z", r"\mathopen{}\left( x \ll y \mathclose{}\right) + z"),
-        ("(x << y) - z", r"\mathopen{}\left( x \ll y \mathclose{}\right) - z"),
-        (
-            "(x & y) << z",
-            r"\mathopen{}\left( x \mathbin{\&} y \mathclose{}\right) \ll z",
-        ),
-        (
-            "(x & y) >> z",
-            r"\mathopen{}\left( x \mathbin{\&} y \mathclose{}\right) \gg z",
-        ),
-        (
-            "(x ^ y) & z",
-            r"\mathopen{}\left( x \oplus y \mathclose{}\right) \mathbin{\&} z",
-        ),
-        (
-            "(x | y) ^ z",
-            r"\mathopen{}\left( x \mathbin{|} y \mathclose{}\right) \oplus z",
-        ),
+        ("(x * y)**z", "( x y )^(z)"),
+        ("(x + y) * z", "( x + y ) z"),
+        ("(x + y) @ z", "( x + y ) z"),
+        ("(x + y) / z", "frac(x + y, z)"),
+        ("(x + y) // z", "floor(frac(x + y, z))"),
+        ("(x + y) % z", "( x + y ) op(%) z"),
+        ("(x << y) + z", "( x << y ) + z"),
+        ("(x << y) - z", "( x << y ) - z"),
+        ("(x & y) << z", "( x op(&) y ) << z"),
+        ("(x & y) >> z", "( x op(&) y ) >> z"),
+        ("(x ^ y) & z", "( x plus.o y ) op(&) z"),
+        ("(x | y) ^ z", "( x op(|) y ) plus.o z"),
         # is_wrapped
-        ("(x // y)**z", r"\left\lfloor\frac{x}{y}\right\rfloor^{z}"),
+        ("(x // y)**z", "floor(frac(x, y))^(z)"),
         # With Call
-        ("x**f(y)", r"x^{f \mathopen{}\left( y \mathclose{}\right)}"),
-        (
-            "f(x)**y",
-            r"\mathopen{}\left("
-            r" f \mathopen{}\left( x \mathclose{}\right)"
-            r" \mathclose{}\right)^{y}",
-        ),
-        ("x * f(y)", r"x \cdot f \mathopen{}\left( y \mathclose{}\right)"),
-        ("f(x) * y", r"f \mathopen{}\left( x \mathclose{}\right) \cdot y"),
-        ("x / f(y)", r"\frac{x}{f \mathopen{}\left( y \mathclose{}\right)}"),
-        ("f(x) / y", r"\frac{f \mathopen{}\left( x \mathclose{}\right)}{y}"),
-        ("x + f(y)", r"x + f \mathopen{}\left( y \mathclose{}\right)"),
-        ("f(x) + y", r"f \mathopen{}\left( x \mathclose{}\right) + y"),
+        ("x**f(y)", "x^(f ( y ))"),
+        ("f(x)**y", "( f ( x ) )^(y)"),
+        ("x * f(y)", "x dot f ( y )"),
+        ("f(x) * y", "f ( x ) dot y"),
+        ("x / f(y)", "frac(x, f ( y ))"),
+        ("f(x) / y", "frac(f ( x ), y)"),
+        ("x + f(y)", "x + f ( y )"),
+        ("f(x) + y", "f ( x ) + y"),
         # With is_wrapped Call
-        ("sqrt(x) ** y", r"\sqrt{ x }^{y}"),
+        ("sqrt(x) ** y", "sqrt( x )^(y)"),
         # With UnaryOp
-        ("x**-y", r"x^{-y}"),
-        ("(-x)**y", r"\mathopen{}\left( -x \mathclose{}\right)^{y}"),
-        ("x * -y", r"x \cdot -y"),
-        ("-x * y", r"-x y"),
-        ("x / -y", r"\frac{x}{-y}"),
-        ("-x / y", r"\frac{-x}{y}"),
-        ("x + -y", r"x + -y"),
-        ("-x + y", r"-x + y"),
+        ("x**-y", "x^(-y)"),
+        ("(-x)**y", "( -x )^(y)"),
+        ("x * -y", "x dot -y"),
+        ("-x * y", "-x y"),
+        ("x / -y", "frac(x, -y)"),
+        ("-x / y", "frac(-x, y)"),
+        ("x + -y", "x + -y"),
+        ("-x + y", "-x + y"),
         # With Compare
-        ("x**(y == z)", r"x^{y = z}"),
-        ("(x == y)**z", r"\mathopen{}\left( x = y \mathclose{}\right)^{z}"),
-        ("x * (y == z)", r"x \cdot \mathopen{}\left( y = z \mathclose{}\right)"),
-        ("(x == y) * z", r"\mathopen{}\left( x = y \mathclose{}\right) z"),
-        ("x / (y == z)", r"\frac{x}{y = z}"),
-        ("(x == y) / z", r"\frac{x = y}{z}"),
-        ("x + (y == z)", r"x + \mathopen{}\left( y = z \mathclose{}\right)"),
-        ("(x == y) + z", r"\mathopen{}\left( x = y \mathclose{}\right) + z"),
+        ("x**(y == z)", "x^(y = z)"),
+        ("(x == y)**z", "( x = y )^(z)"),
+        ("x * (y == z)", "x dot ( y = z )"),
+        ("(x == y) * z", "( x = y ) z"),
+        ("x / (y == z)", "frac(x, y = z)"),
+        ("(x == y) / z", "frac(x = y, z)"),
+        ("x + (y == z)", "x + ( y = z )"),
+        ("(x == y) + z", "( x = y ) + z"),
         # With BoolOp
-        ("x**(y and z)", r"x^{y \land z}"),
-        ("(x and y)**z", r"\mathopen{}\left( x \land y \mathclose{}\right)^{z}"),
-        ("x * (y and z)", r"x \cdot \mathopen{}\left( y \land z \mathclose{}\right)"),
-        ("(x and y) * z", r"\mathopen{}\left( x \land y \mathclose{}\right) z"),
-        ("x / (y and z)", r"\frac{x}{y \land z}"),
-        ("(x and y) / z", r"\frac{x \land y}{z}"),
-        ("x + (y and z)", r"x + \mathopen{}\left( y \land z \mathclose{}\right)"),
-        ("(x and y) + z", r"\mathopen{}\left( x \land y \mathclose{}\right) + z"),
+        ("x**(y and z)", "x^(y and z)"),
+        ("(x and y)**z", "( x and y )^(z)"),
+        ("x * (y and z)", "x dot ( y and z )"),
+        ("(x and y) * z", "( x and y ) z"),
+        ("x / (y and z)", "frac(x, y and z)"),
+        ("(x and y) / z", "frac(x and y, z)"),
+        ("x + (y and z)", "x + ( y and z )"),
+        ("(x and y) + z", "( x and y ) + z"),
     ],
 )
 def test_visit_binop(code: str, latex: str) -> None:
@@ -623,33 +438,30 @@ def test_visit_binop(code: str, latex: str) -> None:
     "code,latex",
     [
         # With literals
-        ("+x", r"+x"),
-        ("-x", r"-x"),
-        ("~x", r"\mathord{\sim} x"),
-        ("not x", r"\lnot x"),
+        ("+x", "+x"),
+        ("-x", "-x"),
+        ("~x", "~x"),
+        ("not x", "not x"),
         # With Call
-        ("+f(x)", r"+f \mathopen{}\left( x \mathclose{}\right)"),
-        ("-f(x)", r"-f \mathopen{}\left( x \mathclose{}\right)"),
-        ("~f(x)", r"\mathord{\sim} f \mathopen{}\left( x \mathclose{}\right)"),
-        ("not f(x)", r"\lnot f \mathopen{}\left( x \mathclose{}\right)"),
+        ("+f(x)", "+f ( x )"),
+        ("-f(x)", "-f ( x )"),
+        ("~f(x)", "~f ( x )"),
+        ("not f(x)", "not f ( x )"),
         # With BinOp
-        ("+(x + y)", r"+\mathopen{}\left( x + y \mathclose{}\right)"),
-        ("-(x + y)", r"-\mathopen{}\left( x + y \mathclose{}\right)"),
-        ("~(x + y)", r"\mathord{\sim} \mathopen{}\left( x + y \mathclose{}\right)"),
-        ("not x + y", r"\lnot \mathopen{}\left( x + y \mathclose{}\right)"),
+        ("+(x + y)", "+( x + y )"),
+        ("-(x + y)", "-( x + y )"),
+        ("~(x + y)", "~( x + y )"),
+        ("not x + y", "not ( x + y )"),
         # With Compare
-        ("+(x == y)", r"+\mathopen{}\left( x = y \mathclose{}\right)"),
-        ("-(x == y)", r"-\mathopen{}\left( x = y \mathclose{}\right)"),
-        ("~(x == y)", r"\mathord{\sim} \mathopen{}\left( x = y \mathclose{}\right)"),
-        ("not x == y", r"\lnot \mathopen{}\left( x = y \mathclose{}\right)"),
+        ("+(x == y)", "+( x = y )"),
+        ("-(x == y)", "-( x = y )"),
+        ("~(x == y)", "~  x = y )"),
+        ("not x == y", "not ( x = y )"),
         # With BoolOp
-        ("+(x and y)", r"+\mathopen{}\left( x \land y \mathclose{}\right)"),
-        ("-(x and y)", r"-\mathopen{}\left( x \land y \mathclose{}\right)"),
-        (
-            "~(x and y)",
-            r"\mathord{\sim} \mathopen{}\left( x \land y \mathclose{}\right)",
-        ),
-        ("not (x and y)", r"\lnot \mathopen{}\left( x \land y \mathclose{}\right)"),
+        ("+(x and y)", "+( x and y )"),
+        ("-(x and y)", "-( x and y )"),
+        ("~(x and y)", "~(x and y)"),
+        ("not (x and y)", "not ( x and y )"),
     ],
 )
 def test_visit_unaryop(code: str, latex: str) -> None:
@@ -664,46 +476,46 @@ def test_visit_unaryop(code: str, latex: str) -> None:
         # 1 comparator
         ("a == b", "a = b"),
         ("a > b", "a > b"),
-        ("a >= b", r"a \ge b"),
-        ("a in b", r"a \in b"),
-        ("a is b", r"a \equiv b"),
-        ("a is not b", r"a \not\equiv b"),
+        ("a >= b", "a >= b"),
+        ("a in b", "a in b"),
+        ("a is b", "a equiv b"),
+        ("a is not b", "a not equiv b"),
         ("a < b", "a < b"),
-        ("a <= b", r"a \le b"),
-        ("a != b", r"a \ne b"),
-        ("a not in b", r"a \notin b"),
+        ("a <= b", "a <= b"),
+        ("a != b", "a eq.not b"),
+        ("a not in b", "a in.not b"),
         # 2 comparators
         ("a == b == c", "a = b = c"),
         ("a == b > c", "a = b > c"),
-        ("a == b >= c", r"a = b \ge c"),
+        ("a == b >= c", "a = b >= c"),
         ("a == b < c", "a = b < c"),
-        ("a == b <= c", r"a = b \le c"),
+        ("a == b <= c", "a = b <= c"),
         ("a > b == c", "a > b = c"),
         ("a > b > c", "a > b > c"),
-        ("a > b >= c", r"a > b \ge c"),
-        ("a >= b == c", r"a \ge b = c"),
-        ("a >= b > c", r"a \ge b > c"),
-        ("a >= b >= c", r"a \ge b \ge c"),
+        ("a > b >= c", "a > b >= c"),
+        ("a >= b == c", "a >= b = c"),
+        ("a >= b > c", "a >= b > c"),
+        ("a >= b >= c", "a >= b >= c"),
         ("a < b == c", "a < b = c"),
         ("a < b < c", "a < b < c"),
-        ("a < b <= c", r"a < b \le c"),
-        ("a <= b == c", r"a \le b = c"),
-        ("a <= b < c", r"a \le b < c"),
-        ("a <= b <= c", r"a \le b \le c"),
+        ("a < b <= c", "a < b <= c"),
+        ("a <= b == c", "a <= b = c"),
+        ("a <= b < c", "a <= b < c"),
+        ("a <= b <= c", "a <= b <= c"),
         # With Call
-        ("a == f(b)", r"a = f \mathopen{}\left( b \mathclose{}\right)"),
-        ("f(a) == b", r"f \mathopen{}\left( a \mathclose{}\right) = b"),
+        ("a == f(b)", "a = f ( b )"),
+        ("f(a) == b", "f ( a ) = b"),
         # With BinOp
-        ("a == b + c", r"a = b + c"),
-        ("a + b == c", r"a + b = c"),
+        ("a == b + c", "a = b + c"),
+        ("a + b == c", "a + b = c"),
         # With UnaryOp
-        ("a == -b", r"a = -b"),
-        ("-a == b", r"-a = b"),
-        ("a == (not b)", r"a = \lnot b"),
-        ("(not a) == b", r"\lnot a = b"),
+        ("a == -b", "a = -b"),
+        ("-a == b", "-a = b"),
+        ("a == (not b)", "a = not b"),
+        ("(not a) == b", "not a = b"),
         # With BoolOp
-        ("a == (b and c)", r"a = \mathopen{}\left( b \land c \mathclose{}\right)"),
-        ("(a and b) == c", r"\mathopen{}\left( a \land b \mathclose{}\right) = c"),
+        ("a == (b and c)", "a = ( b and c )"),
+        ("(a and b) == c", "( a and b ) = c"),
     ],
 )
 def test_visit_compare(code: str, latex: str) -> None:
@@ -716,40 +528,34 @@ def test_visit_compare(code: str, latex: str) -> None:
     "code,latex",
     [
         # With literals
-        ("a and b", r"a \land b"),
-        ("a and b and c", r"a \land b \land c"),
-        ("a or b", r"a \lor b"),
-        ("a or b or c", r"a \lor b \lor c"),
-        ("a or b and c", r"a \lor b \land c"),
-        (
-            "(a or b) and c",
-            r"\mathopen{}\left( a \lor b \mathclose{}\right) \land c",
-        ),
-        ("a and b or c", r"a \land b \lor c"),
-        (
-            "a and (b or c)",
-            r"a \land \mathopen{}\left( b \lor c \mathclose{}\right)",
-        ),
+        ("a and b", "a and b"),
+        ("a and b and c", "a and b and c"),
+        ("a or b", "a or b"),
+        ("a or b or c", "a or b or c"),
+        ("a or b and c", "a or b and c"),
+        ("(a or b) and c", "( a or b ) and c"),
+        ("a and b or c", "a and b or c"),
+        ("a and (b or c)", "a and ( b or c )"),
         # With Call
-        ("a and f(b)", r"a \land f \mathopen{}\left( b \mathclose{}\right)"),
-        ("f(a) and b", r"f \mathopen{}\left( a \mathclose{}\right) \land b"),
-        ("a or f(b)", r"a \lor f \mathopen{}\left( b \mathclose{}\right)"),
-        ("f(a) or b", r"f \mathopen{}\left( a \mathclose{}\right) \lor b"),
+        ("a and f(b)", "a and f ( b )"),
+        ("f(a) and b", "f ( a ) and b"),
+        ("a or f(b)", "a or f ( b )"),
+        ("f(a) or b", "f ( a ) or b"),
         # With BinOp
-        ("a and b + c", r"a \land b + c"),
-        ("a + b and c", r"a + b \land c"),
-        ("a or b + c", r"a \lor b + c"),
-        ("a + b or c", r"a + b \lor c"),
+        ("a and b + c", "a and b + c"),
+        ("a + b and c", "a + b and c"),
+        ("a or b + c", "a or b + c"),
+        ("a + b or c", "a + b or c"),
         # With UnaryOp
-        ("a and not b", r"a \land \lnot b"),
-        ("not a and b", r"\lnot a \land b"),
-        ("a or not b", r"a \lor \lnot b"),
-        ("not a or b", r"\lnot a \lor b"),
+        ("a and not b", "a and not b"),
+        ("not a and b", "not a and b"),
+        ("a or not b", "a or not b"),
+        ("not a or b", "not a or b"),
         # With Compare
-        ("a and b == c", r"a \land b = c"),
-        ("a == b and c", r"a = b \land c"),
-        ("a or b == c", r"a \lor b = c"),
-        ("a == b or c", r"a = b \lor c"),
+        ("a and b == c", "a and b = c"),
+        ("a == b and c", "a = b and c"),
+        ("a or b == c", "a or b = c"),
+        ("a == b or c", "a = b or c"),
     ],
 )
 def test_visit_boolop(code: str, latex: str) -> None:
@@ -760,7 +566,7 @@ def test_visit_boolop(code: str, latex: str) -> None:
 
 @pytest.mark.parametrize(
     "code,latex",
-    [
+    {
         ("0", "0"),
         ("1", "1"),
         ("0.0", "0.0"),
@@ -768,13 +574,13 @@ def test_visit_boolop(code: str, latex: str) -> None:
         ("0.0j", "0j"),
         ("1.0j", "1j"),
         ("1.5j", "1.5j"),
-        ('"abc"', r'\textrm{"abc"}'),
-        ('b"abc"', r"\textrm{b'abc'}"),
-        ("None", r"\mathrm{None}"),
-        ("False", r"\mathrm{False}"),
-        ("True", r"\mathrm{True}"),
-        ("...", r"\cdots"),
-    ],
+        ('"abc"', "quote[abc]"),
+        ('b"abc"', "b#quote[abc]"),
+        ("None", '"None"'),
+        ("False", '"False"'),
+        ("True", '"True"'),
+        ("...", "dots.c"),
+    },
 )
 def test_visit_constant(code: str, latex: str) -> None:
     tree = ast_utils.parse_expr(code)
@@ -785,11 +591,11 @@ def test_visit_constant(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("x[0]", "x_{0}"),
-        ("x[0][1]", "x_{0, 1}"),
-        ("x[0][1][2]", "x_{0, 1, 2}"),
-        ("x[foo]", r"x_{\mathrm{foo}}"),
-        ("x[floor(x)]", r"x_{\mathopen{}\left\lfloor x \mathclose{}\right\rfloor}"),
+        ("x[0]", "x_(0)"),
+        ("x[0][1]", "x_(0, 1)"),
+        ("x[0][1][2]", "x_(0, 1, 2)"),
+        ("x[foo]", 'x_("foo")'),
+        ("x[floor(x)]", "x_(floor( x ))"),
     ],
 )
 def test_visit_subscript(code: str, latex: str) -> None:
@@ -801,10 +607,10 @@ def test_visit_subscript(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("a - b", r"a \setminus b"),
-        ("a & b", r"a \cap b"),
-        ("a ^ b", r"a \mathbin{\triangle} b"),
-        ("a | b", r"a \cup b"),
+        ("a - b", "a without b"),
+        ("a & b", "a cap b"),
+        ("a ^ b", "a triangle b"),
+        ("a | b", "a union b"),
     ],
 )
 def test_visit_binop_use_set_symbols(code: str, latex: str) -> None:
@@ -818,10 +624,10 @@ def test_visit_binop_use_set_symbols(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("a < b", r"a \subset b"),
-        ("a <= b", r"a \subseteq b"),
-        ("a > b", r"a \supset b"),
-        ("a >= b", r"a \supseteq b"),
+        ("a < b", "a subset b"),
+        ("a <= b", "a subset.eq b"),
+        ("a > b", "a supset b"),
+        ("a >= b", "a supset.eq b"),
     ],
 )
 def test_visit_compare_use_set_symbols(code: str, latex: str) -> None:
@@ -835,41 +641,18 @@ def test_visit_compare_use_set_symbols(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("array(1)", r"\mathrm{array} \mathopen{}\left( 1 \mathclose{}\right)"),
-        (
-            "array([])",
-            r"\mathrm{array} \mathopen{}\left("
-            r" \mathopen{}\left[  \mathclose{}\right]"
-            r" \mathclose{}\right)",
-        ),
-        ("array([1])", r"\begin{bmatrix} 1 \end{bmatrix}"),
-        ("array([1, 2, 3])", r"\begin{bmatrix} 1 & 2 & 3 \end{bmatrix}"),
-        (
-            "array([[]])",
-            r"\mathrm{array} \mathopen{}\left("
-            r" \mathopen{}\left[ \mathopen{}\left["
-            r"  \mathclose{}\right] \mathclose{}\right]"
-            r" \mathclose{}\right)",
-        ),
-        ("array([[1]])", r"\begin{bmatrix} 1 \end{bmatrix}"),
-        ("array([[1], [2], [3]])", r"\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}"),
-        (
-            "array([[1], [2], [3, 4]])",
-            r"\mathrm{array} \mathopen{}\left("
-            r" \mathopen{}\left["
-            r" \mathopen{}\left[ 1 \mathclose{}\right],"
-            r" \mathopen{}\left[ 2 \mathclose{}\right],"
-            r" \mathopen{}\left[ 3, 4 \mathclose{}\right]"
-            r" \mathclose{}\right]"
-            r" \mathclose{}\right)",
-        ),
-        (
-            "array([[1, 2], [3, 4], [5, 6]])",
-            r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \end{bmatrix}",
-        ),
+        ("array(1)", 'op("array") ( 1 )'),
+        ("array([])", 'op("array")([])'),
+        ("array([1])", 'mat(delim:"[", 1 )'),
+        ("array([1, 2, 3])", 'mat(delim:"[", 1, 2, 3 )'),
+        ("array([[]])", 'op("array")([[]])'),
+        ("array([[1]])", 'mat(delim:"[", 1 )'),
+        ("array([[1], [2], [3]])", 'mat(delim:"[", 1; 2; 3 )'),
+        ("array([[1], [2], [3, 4]])", 'op("array")([[ 1 ], [ 2 ], [ 3, 4 ]])'),
+        ("array([[1, 2], [3, 4], [5, 6]])", 'mat(delim:"[", 1, 2; 3, 4; 5, 6 )'),
         # Only checks two cases for ndarray.
-        ("ndarray(1)", r"\mathrm{ndarray} \mathopen{}\left( 1 \mathclose{}\right)"),
-        ("ndarray([1])", r"\begin{bmatrix} 1 \end{bmatrix}"),
+        ("ndarray(1)", 'op("ndarray") ( 1 )'),
+        ("ndarray([1])", 'mat(delim:"[", 1 )'),
     ],
 )
 def test_numpy_array(code: str, latex: str) -> None:
@@ -881,29 +664,24 @@ def test_numpy_array(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("zeros(0)", r"\mathbf{0}^{1 \times 0}"),
-        ("zeros(1)", r"\mathbf{0}^{1 \times 1}"),
-        ("zeros(2)", r"\mathbf{0}^{1 \times 2}"),
-        ("zeros(())", r"0"),
-        ("zeros((0,))", r"\mathbf{0}^{1 \times 0}"),
-        ("zeros((1,))", r"\mathbf{0}^{1 \times 1}"),
-        ("zeros((2,))", r"\mathbf{0}^{1 \times 2}"),
-        ("zeros((0, 0))", r"\mathbf{0}^{0 \times 0}"),
-        ("zeros((1, 1))", r"\mathbf{0}^{1 \times 1}"),
-        ("zeros((2, 3))", r"\mathbf{0}^{2 \times 3}"),
-        ("zeros((0, 0, 0))", r"\mathbf{0}^{0 \times 0 \times 0}"),
-        ("zeros((1, 1, 1))", r"\mathbf{0}^{1 \times 1 \times 1}"),
-        ("zeros((2, 3, 5))", r"\mathbf{0}^{2 \times 3 \times 5}"),
+        ("zeros(0)", "bold(0)^(1 times 0)"),
+        ("zeros(1)", "bold(0)^(1 times 1)"),
+        ("zeros(2)", "bold(0)^(1 times 2)"),
+        ("zeros(())", "0"),
+        ("zeros((0,))", "bold(0)^(1 times 0)"),
+        ("zeros((1,))", "bold(0)^(1 times 1)"),
+        ("zeros((2,))", "bold(0)^(1 times 2)"),
+        ("zeros((0, 0))", "bold(0)^(0 times 0)"),
+        ("zeros((1, 1))", "bold(0)^(1 times 1)"),
+        ("zeros((2, 3))", "bold(0)^(2 times 3)"),
+        ("zeros((0, 0, 0))", "bold(0)^(0 times 0 times 0)"),
+        ("zeros((1, 1, 1))", "bold(0)^(1 times 1 times 1)"),
+        ("zeros((2, 3, 5))", "bold(0)^(2 times 3 times 5)"),
         # Unsupported
-        ("zeros()", r"\mathrm{zeros} \mathopen{}\left( \mathclose{}\right)"),
-        ("zeros(x)", r"\mathrm{zeros} \mathopen{}\left( x \mathclose{}\right)"),
-        ("zeros(0, x)", r"\mathrm{zeros} \mathopen{}\left( 0, x \mathclose{}\right)"),
-        (
-            "zeros((x,))",
-            r"\mathrm{zeros} \mathopen{}\left("
-            r" \mathopen{}\left( x \mathclose{}\right)"
-            r" \mathclose{}\right)",
-        ),
+        ("zeros()", 'op("zeros") ( )'),
+        ("zeros(x)", 'op("zeros") ( x )'),
+        ("zeros(0, x)", 'op("zeros") ( 0, x )'),
+        ("zeros((x,))", 'op("zeros") ( ( x ) )'),
     ],
 )
 def test_zeros(code: str, latex: str) -> None:
@@ -915,16 +693,13 @@ def test_zeros(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("identity(0)", r"\mathbf{I}_{0}"),
-        ("identity(1)", r"\mathbf{I}_{1}"),
-        ("identity(2)", r"\mathbf{I}_{2}"),
+        ("identity(0)", "bold(I)_(0)"),
+        ("identity(1)", "bold(I)_(1)"),
+        ("identity(2)", "bold(I)_(2)"),
         # Unsupported
-        ("identity()", r"\mathrm{identity} \mathopen{}\left( \mathclose{}\right)"),
-        ("identity(x)", r"\mathrm{identity} \mathopen{}\left( x \mathclose{}\right)"),
-        (
-            "identity(0, x)",
-            r"\mathrm{identity} \mathopen{}\left( 0, x \mathclose{}\right)",
-        ),
+        ("identity()", 'op("identity") ( )'),
+        ("identity(x)", 'op("identity") ( x )'),
+        ("identity(0, x)", 'op("identity") ( 0, x )'),
     ],
 )
 def test_identity(code: str, latex: str) -> None:
@@ -936,16 +711,12 @@ def test_identity(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("transpose(A)", r"\mathbf{A}^\intercal"),
-        ("transpose(b)", r"\mathbf{b}^\intercal"),
+        ("transpose(A)", "bold(A)^(T)"),
+        ("transpose(b)", "bold(b)^(T)"),
         # Unsupported
-        ("transpose()", r"\mathrm{transpose} \mathopen{}\left( \mathclose{}\right)"),
-        ("transpose(2)", r"\mathrm{transpose} \mathopen{}\left( 2 \mathclose{}\right)"),
-        (
-            "transpose(a, (1, 0))",
-            r"\mathrm{transpose} \mathopen{}\left( a, "
-            r"\mathopen{}\left( 1, 0 \mathclose{}\right) \mathclose{}\right)",
-        ),
+        ("transpose()", 'op("transpose") ( )'),
+        ("transpose(2)", 'op("transpose") ( 2 )'),
+        ("transpose(a, (1, 0))", 'op("transpose") ( a, ( 1, 0 ) )'),
     ],
 )
 def test_transpose(code: str, latex: str) -> None:
@@ -957,26 +728,17 @@ def test_transpose(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("det(A)", r"\det \mathopen{}\left( \mathbf{A} \mathclose{}\right)"),
-        ("det(b)", r"\det \mathopen{}\left( \mathbf{b} \mathclose{}\right)"),
-        (
-            "det([[1, 2], [3, 4]])",
-            r"\det \mathopen{}\left( \begin{bmatrix} 1 & 2 \\"
-            r" 3 & 4 \end{bmatrix} \mathclose{}\right)",
-        ),
+        ("det(A)", "det ( bold(A) )"),
+        ("det(b)", "det ( bold(b) )"),
+        ("det([[1, 2], [3, 4]])", 'det ( mat(delim:"[" 1, 2; 3, 4 ) )'),
         (
             "det([[1, 2, 3], [4, 5, 6], [7, 8, 9]])",
-            r"\det \mathopen{}\left( \begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\"
-            r" 7 & 8 & 9 \end{bmatrix} \mathclose{}\right)",
+            'det ( mat(delim:"[" 1, 2, 3; 4, 5, 6; 7, 8, 9 ) )',
         ),
         # Unsupported
-        ("det()", r"\mathrm{det} \mathopen{}\left( \mathclose{}\right)"),
-        ("det(2)", r"\mathrm{det} \mathopen{}\left( 2 \mathclose{}\right)"),
-        (
-            "det(a, (1, 0))",
-            r"\mathrm{det} \mathopen{}\left( a, "
-            r"\mathopen{}\left( 1, 0 \mathclose{}\right) \mathclose{}\right)",
-        ),
+        ("det()", "det( )"),
+        ("det(2)", "det( 2 )"),
+        ("det(a, (1, 0))", "det( a, ( 1, 0 ) )"),
     ],
 )
 def test_determinant(code: str, latex: str) -> None:
@@ -988,38 +750,17 @@ def test_determinant(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        (
-            "matrix_rank(A)",
-            r"\mathrm{rank} \mathopen{}\left( \mathbf{A} \mathclose{}\right)",
-        ),
-        (
-            "matrix_rank(b)",
-            r"\mathrm{rank} \mathopen{}\left( \mathbf{b} \mathclose{}\right)",
-        ),
-        (
-            "matrix_rank([[1, 2], [3, 4]])",
-            r"\mathrm{rank} \mathopen{}\left( \begin{bmatrix} 1 & 2 \\"
-            r" 3 & 4 \end{bmatrix} \mathclose{}\right)",
-        ),
+        ("matrix_rank(A)", 'op("rank") ( bold(A) )'),
+        ("matrix_rank(b)", 'op("rank") ( bold(b) )'),
+        ("matrix_rank([[1, 2], [3, 4]])", 'op("rank") ( mat(delim:"[", 1, 2; 3, 4 ) )'),
         (
             "matrix_rank([[1, 2, 3], [4, 5, 6], [7, 8, 9]])",
-            r"\mathrm{rank} \mathopen{}\left( \begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\"
-            r" 7 & 8 & 9 \end{bmatrix} \mathclose{}\right)",
+            'op("rank") ( mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9 ) )',
         ),
         # Unsupported
-        (
-            "matrix_rank()",
-            r"\mathrm{matrix\_rank} \mathopen{}\left( \mathclose{}\right)",
-        ),
-        (
-            "matrix_rank(2)",
-            r"\mathrm{matrix\_rank} \mathopen{}\left( 2 \mathclose{}\right)",
-        ),
-        (
-            "matrix_rank(a, (1, 0))",
-            r"\mathrm{matrix\_rank} \mathopen{}\left( a, "
-            r"\mathopen{}\left( 1, 0 \mathclose{}\right) \mathclose{}\right)",
-        ),
+        ("matrix_rank()", 'op("matrix_rank") ( )'),
+        ("matrix_rank(2)", 'op("matrix_rank") ( 2 )'),
+        ("matrix_rank(a, (1, 0))", 'op("matrix_rank") ( a, ( 1, 0 ) )'),
     ],
 )
 def test_matrix_rank(code: str, latex: str) -> None:
@@ -1031,30 +772,17 @@ def test_matrix_rank(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("matrix_power(A, 2)", r"\mathbf{A}^{2}"),
-        ("matrix_power(b, 2)", r"\mathbf{b}^{2}"),
-        (
-            "matrix_power([[1, 2], [3, 4]], 2)",
-            r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}^{2}",
-        ),
+        ("matrix_power(A, 2)", "bold(A)^(2)"),
+        ("matrix_power(b, 2)", "bold(b)^(2)"),
+        ("matrix_power([[1, 2], [3, 4]], 2)", 'mat(delim:"[", 1, 2; 3, 4 )^(2)'),
         (
             "matrix_power([[1, 2, 3], [4, 5, 6], [7, 8, 9]], 42)",
-            r"\begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{bmatrix}^{42}",
+            'mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9 )^(42)',
         ),
         # Unsupported
-        (
-            "matrix_power()",
-            r"\mathrm{matrix\_power} \mathopen{}\left( \mathclose{}\right)",
-        ),
-        (
-            "matrix_power(2)",
-            r"\mathrm{matrix\_power} \mathopen{}\left( 2 \mathclose{}\right)",
-        ),
-        (
-            "matrix_power(a, (1, 0))",
-            r"\mathrm{matrix\_power} \mathopen{}\left( a, "
-            r"\mathopen{}\left( 1, 0 \mathclose{}\right) \mathclose{}\right)",
-        ),
+        ("matrix_power()", 'op("matrix_power") ( )'),
+        ("matrix_power(2)", 'op("matrix_power") ( 2 )'),
+        ("matrix_power(a, (1, 0))", 'op("matrix_power") ( a, ( 1, 0) )'),
     ],
 )
 def test_matrix_power(code: str, latex: str) -> None:
@@ -1066,21 +794,20 @@ def test_matrix_power(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("inv(A)", r"\mathbf{A}^{-1}"),
-        ("inv(b)", r"\mathbf{b}^{-1}"),
-        ("inv([[1, 2], [3, 4]])", r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}^{-1}"),
+        ("inv(A)", "bold(A)^(-1)"),
+        ("inv(b)", "bold(b)^(-1)"),
+        (
+            "inv([[1, 2], [3, 4]])",
+            'mat(delim:"[", 1, 2; 3, 4 )^(-1)',
+        ),
         (
             "inv([[1, 2, 3], [4, 5, 6], [7, 8, 9]])",
-            r"\begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{bmatrix}^{-1}",
+            'mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9 )^(-1)',
         ),
         # Unsupported
-        ("inv()", r"\mathrm{inv} \mathopen{}\left( \mathclose{}\right)"),
-        ("inv(2)", r"\mathrm{inv} \mathopen{}\left( 2 \mathclose{}\right)"),
-        (
-            "inv(a, (1, 0))",
-            r"\mathrm{inv} \mathopen{}\left( a, "
-            r"\mathopen{}\left( 1, 0 \mathclose{}\right) \mathclose{}\right)",
-        ),
+        ("inv()", 'op("inv") ( )'),
+        ("inv(2)", 'op("inv") ( 2 )'),
+        ("inv(a, (1, 0))", 'op("inv") ( a, ( 1, 0) )'),
     ],
 )
 def test_inv(code: str, latex: str) -> None:
@@ -1092,21 +819,17 @@ def test_inv(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("pinv(A)", r"\mathbf{A}^{+}"),
-        ("pinv(b)", r"\mathbf{b}^{+}"),
-        ("pinv([[1, 2], [3, 4]])", r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}^{+}"),
+        ("pinv(A)", "bold(A)^(+)"),
+        ("pinv(b)", "bold(b)^(+)"),
+        ("pinv([[1, 2], [3, 4]])", 'mat(delim:"[", 1, 2; 3, 4 )^(+)'),
         (
             "pinv([[1, 2, 3], [4, 5, 6], [7, 8, 9]])",
-            r"\begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{bmatrix}^{+}",
+            'mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9 )^(+)',
         ),
         # Unsupported
-        ("pinv()", r"\mathrm{pinv} \mathopen{}\left( \mathclose{}\right)"),
-        ("pinv(2)", r"\mathrm{pinv} \mathopen{}\left( 2 \mathclose{}\right)"),
-        (
-            "pinv(a, (1, 0))",
-            r"\mathrm{pinv} \mathopen{}\left( a, "
-            r"\mathopen{}\left( 1, 0 \mathclose{}\right) \mathclose{}\right)",
-        ),
+        ("pinv()", 'op("pinv") ( )'),
+        ("pinv(2)", 'op("pinv") ( 2 )'),
+        ("pinv(a, (1, 0))", 'op("pinv") ( a, ( 1, 0) )'),
     ],
 )
 def test_pinv(code: str, latex: str) -> None:
