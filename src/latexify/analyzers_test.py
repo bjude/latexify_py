@@ -156,9 +156,9 @@ def test_analyze_range_invalid(code: str) -> None:
     [
         ("n + 1", "n"),
         ("n + 2", "n + 1"),
-        ("n - (-1)", "n - (-1) - 1"),
+        ("n - (-1)", "n"),
         ("n - 1", "n - 2"),
-        ("1 * 2", "1 * 2 - 1"),
+        ("1 * 2", "1"),
     ],
 )
 def test_reduce_stop_parameter(before: str, after: str) -> None:
