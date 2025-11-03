@@ -97,8 +97,11 @@ def test_visit_listcomp(code: str, latex: str) -> None:
     "code,latex",
     [
         ("{i for i in n}", "{ i mid(|) i in n }"),
-        ("{i for i in n if i > 0}", "{ i mid(|) (i in n) and (i > 0) }"),
-        ("{i for i in n if i > 0 if f(i)}", "{ i mid(|) (i in n) and ( f(i) ) }"),
+        ("{i for i in n if i > 0}", "{ i mid(|) ( i in n ) and ( i > 0 ) }"),
+        (
+            "{i for i in n if i > 0 if f(i)}",
+            "{ i mid(|) ( i in n ) and ( i > 0 ) and ( f ( i ) ) }",
+        ),
         ("{i for k in n for i in k}", "{ i mid(|) k in n, i in k }"),
         (
             "{i for k in n for i in k if i > 0}",
@@ -204,7 +207,7 @@ def test_visit_call_with_pow(code: str, latex: str) -> None:
         ("(i for i in range(1, m))", "_(i = 1)^(m - 1) (i)"),
         ("(i for i in range(n, 3))", "_(i = n)^(2) (i)"),
         # FIXME(BJ): This could be done differently by specifying modulo = 0
-        ("(i for i in range(n, m, k))", '_(i in op("range") ( n, m, k ) )^() (i)'),
+        ("(i for i in range(n, m, k))", '_(i in op("range") ( n, m, k ))^() (i)'),
     ],
 )
 def test_visit_call_sum_prod(src_suffix: str, dest_suffix: str) -> None:
@@ -253,7 +256,7 @@ def test_visit_call_sum_prod_multiple_comprehension(code: str, latex: str) -> No
 @pytest.mark.parametrize(
     "src_suffix,dest_suffix",
     [
-        ("(i for i in x if i < y)", "_(( i in x ) and ( i < y))^() (i)"),
+        ("(i for i in x if i < y)", "_(( i in x ) and ( i < y ))^() (i)"),
         (
             "(i for i in x if i < y if f(i))",
             "_(( i in x ) and ( i < y ) and ( f ( i ) ))^() (i)",
@@ -272,14 +275,14 @@ def test_visit_call_sum_prod_with_if(src_suffix: str, dest_suffix: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("x if x < y else y", 'cases( x ","& "if" x < y, y ","& "otherwise")'),
+        ("x if x < y else y", 'cases( x ","& "if" x < y, y ","& "otherwise" )'),
         (
             "x if x < y else (y if y < z else z)",
-            'cases( x ","& "if" x < y, y ","& "if" y < z, z ","& "otherwise")',
+            'cases( x ","& "if" x < y, y ","& "if" y < z, z ","& "otherwise" )',
         ),
         (
             "x if x < y else (y if y < z else (z if z < w else w))",
-            'cases( x ","& "if" x < y, y ","& "if" y < z, z ","& "if" z < w, w ","& "otherwise")',
+            'cases( x ","& "if" x < y, y ","& "if" y < z, z ","& "if" z < w, w ","& "otherwise" )',
         ),
     ],
 )
@@ -319,7 +322,7 @@ def test_if_then_else(code: str, latex: str) -> None:
         ("(x >> y) >> z", "x >> y >> z"),
         ("(x & y) & z", "x op(&) y op(&) z"),
         ("(x ^ y) ^ z", "x plus.o y plus.o z"),
-        ("(x | y) | z", "x op(|) y (|) z"),
+        ("(x | y) | z", "x op(|) y op(|) z"),
         # x op (y op z)
         ("x**(y**z)", "x^(y^(z))"),
         ("x * (y * z)", "x y z"),
@@ -349,8 +352,8 @@ def test_if_then_else(code: str, latex: str) -> None:
         ("x ^ y | z", "x plus.o y op(|) z"),
         # x OP (y op z)
         ("x**(y * z)", "x^(y z)"),
-        ("x * (y + z)", "x dot ( y + z )"),
-        ("x @ (y + z)", "x dot ( y + z )"),
+        ("x * (y + z)", "x dot.op ( y + z )"),
+        ("x @ (y + z)", "x dot.op ( y + z )"),
         ("x / (y + z)", "frac(x, y + z)"),
         ("x // (y + z)", "floor(frac(x, y + z))"),
         ("x % (y + z)", "x op(%) ( y + z )"),
@@ -391,8 +394,8 @@ def test_if_then_else(code: str, latex: str) -> None:
         # With Call
         ("x**f(y)", "x^(f ( y ))"),
         ("f(x)**y", "( f ( x ) )^(y)"),
-        ("x * f(y)", "x dot f ( y )"),
-        ("f(x) * y", "f ( x ) dot y"),
+        ("x * f(y)", "x dot.op f ( y )"),
+        ("f(x) * y", "f ( x ) dot.op y"),
         ("x / f(y)", "frac(x, f ( y ))"),
         ("f(x) / y", "frac(f ( x ), y)"),
         ("x + f(y)", "x + f ( y )"),
@@ -402,7 +405,7 @@ def test_if_then_else(code: str, latex: str) -> None:
         # With UnaryOp
         ("x**-y", "x^(-y)"),
         ("(-x)**y", "( -x )^(y)"),
-        ("x * -y", "x dot -y"),
+        ("x * -y", "x dot.op -y"),
         ("-x * y", "-x y"),
         ("x / -y", "frac(x, -y)"),
         ("-x / y", "frac(-x, y)"),
@@ -411,7 +414,7 @@ def test_if_then_else(code: str, latex: str) -> None:
         # With Compare
         ("x**(y == z)", "x^(y = z)"),
         ("(x == y)**z", "( x = y )^(z)"),
-        ("x * (y == z)", "x dot ( y = z )"),
+        ("x * (y == z)", "x dot.op ( y = z )"),
         ("(x == y) * z", "( x = y ) z"),
         ("x / (y == z)", "frac(x, y = z)"),
         ("(x == y) / z", "frac(x = y, z)"),
@@ -420,7 +423,7 @@ def test_if_then_else(code: str, latex: str) -> None:
         # With BoolOp
         ("x**(y and z)", "x^(y and z)"),
         ("(x and y)**z", "( x and y )^(z)"),
-        ("x * (y and z)", "x dot ( y and z )"),
+        ("x * (y and z)", "x dot.op ( y and z )"),
         ("(x and y) * z", "( x and y ) z"),
         ("x / (y and z)", "frac(x, y and z)"),
         ("(x and y) / z", "frac(x and y, z)"),
@@ -455,12 +458,12 @@ def test_visit_binop(code: str, latex: str) -> None:
         # With Compare
         ("+(x == y)", "+( x = y )"),
         ("-(x == y)", "-( x = y )"),
-        ("~(x == y)", "~  x = y )"),
+        ("~(x == y)", "~( x = y )"),
         ("not x == y", "not ( x = y )"),
         # With BoolOp
         ("+(x and y)", "+( x and y )"),
         ("-(x and y)", "-( x and y )"),
-        ("~(x and y)", "~(x and y)"),
+        ("~(x and y)", "~( x and y )"),
         ("not (x and y)", "not ( x and y )"),
     ],
 )
@@ -479,7 +482,7 @@ def test_visit_unaryop(code: str, latex: str) -> None:
         ("a >= b", "a >= b"),
         ("a in b", "a in b"),
         ("a is b", "a equiv b"),
-        ("a is not b", "a not equiv b"),
+        ("a is not b", "a equiv.not b"),
         ("a < b", "a < b"),
         ("a <= b", "a <= b"),
         ("a != b", "a eq.not b"),
@@ -574,7 +577,7 @@ def test_visit_boolop(code: str, latex: str) -> None:
         ("0.0j", "0j"),
         ("1.0j", "1j"),
         ("1.5j", "1.5j"),
-        ('"abc"', "quote[abc]"),
+        ('"abc"', "#quote[abc]"),
         ('b"abc"', "b#quote[abc]"),
         ("None", '"None"'),
         ("False", '"False"'),
@@ -608,7 +611,7 @@ def test_visit_subscript(code: str, latex: str) -> None:
     "code,latex",
     [
         ("a - b", "a without b"),
-        ("a & b", "a cap b"),
+        ("a & b", "a inter b"),
         ("a ^ b", "a triangle b"),
         ("a | b", "a union b"),
     ],
@@ -642,13 +645,13 @@ def test_visit_compare_use_set_symbols(code: str, latex: str) -> None:
     "code,latex",
     [
         ("array(1)", 'op("array") ( 1 )'),
-        ("array([])", 'op("array")([])'),
+        ("array([])", 'op("array") ( [  ] )'),
         ("array([1])", 'mat(delim:"[", 1 )'),
         ("array([1, 2, 3])", 'mat(delim:"[", 1, 2, 3 )'),
-        ("array([[]])", 'op("array")([[]])'),
+        ("array([[]])", 'op("array") ( [ [  ] ] )'),
         ("array([[1]])", 'mat(delim:"[", 1 )'),
         ("array([[1], [2], [3]])", 'mat(delim:"[", 1; 2; 3 )'),
-        ("array([[1], [2], [3, 4]])", 'op("array")([[ 1 ], [ 2 ], [ 3, 4 ]])'),
+        ("array([[1], [2], [3, 4]])", 'op("array") ( [ [ 1 ], [ 2 ], [ 3, 4 ] ] )'),
         ("array([[1, 2], [3, 4], [5, 6]])", 'mat(delim:"[", 1, 2; 3, 4; 5, 6 )'),
         # Only checks two cases for ndarray.
         ("ndarray(1)", 'op("ndarray") ( 1 )'),
@@ -711,8 +714,8 @@ def test_identity(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("transpose(A)", "bold(A)^(T)"),
-        ("transpose(b)", "bold(b)^(T)"),
+        ("transpose(A)", "bold(A)^T"),
+        ("transpose(b)", "bold(b)^T"),
         # Unsupported
         ("transpose()", 'op("transpose") ( )'),
         ("transpose(2)", 'op("transpose") ( 2 )'),
@@ -730,15 +733,15 @@ def test_transpose(code: str, latex: str) -> None:
     [
         ("det(A)", "det ( bold(A) )"),
         ("det(b)", "det ( bold(b) )"),
-        ("det([[1, 2], [3, 4]])", 'det ( mat(delim:"[" 1, 2; 3, 4 ) )'),
+        ("det([[1, 2], [3, 4]])", 'det ( mat(delim:"[", 1, 2; 3, 4 ) )'),
         (
             "det([[1, 2, 3], [4, 5, 6], [7, 8, 9]])",
-            'det ( mat(delim:"[" 1, 2, 3; 4, 5, 6; 7, 8, 9 ) )',
+            'det ( mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9 ) )',
         ),
         # Unsupported
-        ("det()", "det( )"),
-        ("det(2)", "det( 2 )"),
-        ("det(a, (1, 0))", "det( a, ( 1, 0 ) )"),
+        ("det()", "det ( )"),
+        ("det(2)", "det ( 2 )"),
+        ("det(a, (1, 0))", "det ( a, ( 1, 0 ) )"),
     ],
 )
 def test_determinant(code: str, latex: str) -> None:
@@ -782,7 +785,7 @@ def test_matrix_rank(code: str, latex: str) -> None:
         # Unsupported
         ("matrix_power()", 'op("matrix_power") ( )'),
         ("matrix_power(2)", 'op("matrix_power") ( 2 )'),
-        ("matrix_power(a, (1, 0))", 'op("matrix_power") ( a, ( 1, 0) )'),
+        ("matrix_power(a, (1, 0))", 'op("matrix_power") ( a, ( 1, 0 ) )'),
     ],
 )
 def test_matrix_power(code: str, latex: str) -> None:
@@ -807,7 +810,7 @@ def test_matrix_power(code: str, latex: str) -> None:
         # Unsupported
         ("inv()", 'op("inv") ( )'),
         ("inv(2)", 'op("inv") ( 2 )'),
-        ("inv(a, (1, 0))", 'op("inv") ( a, ( 1, 0) )'),
+        ("inv(a, (1, 0))", 'op("inv") ( a, ( 1, 0 ) )'),
     ],
 )
 def test_inv(code: str, latex: str) -> None:
@@ -829,7 +832,7 @@ def test_inv(code: str, latex: str) -> None:
         # Unsupported
         ("pinv()", 'op("pinv") ( )'),
         ("pinv(2)", 'op("pinv") ( 2 )'),
-        ("pinv(a, (1, 0))", 'op("pinv") ( a, ( 1, 0) )'),
+        ("pinv(a, (1, 0))", 'op("pinv") ( a, ( 1, 0 ) )'),
     ],
 )
 def test_pinv(code: str, latex: str) -> None:

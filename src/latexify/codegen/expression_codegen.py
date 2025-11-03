@@ -62,51 +62,39 @@ class ExpressionCodegen(ast.NodeVisitor):
     def visit_Tuple(self, node: ast.Tuple) -> str:
         """Visit a Tuple node."""
         elts = [self.visit(elt) for elt in node.elts]
-        return r"\mathopen{}\left( " + r", ".join(elts) + r" \mathclose{}\right)"
+        return "( " + ", ".join(elts) + " )"
 
     def visit_List(self, node: ast.List) -> str:
         """Visit a List node."""
         elts = [self.visit(elt) for elt in node.elts]
-        return r"\mathopen{}\left[ " + r", ".join(elts) + r" \mathclose{}\right]"
+        return "[ " + ", ".join(elts) + " ]"
 
     def visit_Set(self, node: ast.Set) -> str:
         """Visit a Set node."""
         elts = [self.visit(elt) for elt in node.elts]
-        return r"\mathopen{}\left\{ " + r", ".join(elts) + r" \mathclose{}\right\}"
+        return "{ " + ", ".join(elts) + " }"
 
     def visit_ListComp(self, node: ast.ListComp) -> str:
         """Visit a ListComp node."""
         generators = [self.visit(comp) for comp in node.generators]
-        return (
-            r"\mathopen{}\left[ "
-            + self.visit(node.elt)
-            + r" \mid "
-            + ", ".join(generators)
-            + r" \mathclose{}\right]"
-        )
+        return "[ " + self.visit(node.elt) + " mid(|) " + ", ".join(generators) + " ]"
 
     def visit_SetComp(self, node: ast.SetComp) -> str:
         """Visit a SetComp node."""
         generators = [self.visit(comp) for comp in node.generators]
-        return (
-            r"\mathopen{}\left\{ "
-            + self.visit(node.elt)
-            + r" \mid "
-            + ", ".join(generators)
-            + r" \mathclose{}\right\}"
-        )
+        return "{ " + self.visit(node.elt) + " mid(|) " + ", ".join(generators) + " }"
 
     def visit_comprehension(self, node: ast.comprehension) -> str:
         """Visit a comprehension node."""
-        target = rf"{self.visit(node.target)} \in {self.visit(node.iter)}"
+        target = f"{self.visit(node.target)} in {self.visit(node.iter)}"
 
         if not node.ifs:
             # Returns the source without parenthesis.
             return target
 
         conds = [target] + [self.visit(cond) for cond in node.ifs]
-        wrapped = [r"\mathopen{}\left( " + s + r" \mathclose{}\right)" for s in conds]
-        return r" \land ".join(wrapped)
+        wrapped = ["( " + s + " )" for s in conds]
+        return " and ".join(wrapped)
 
     def _generate_sum_prod(self, node: ast.Call) -> str | None:
         """Generates sum/prod expression.
@@ -124,17 +112,14 @@ class ExpressionCodegen(ast.NodeVisitor):
         assert name in ("fsum", "sum", "prod")
 
         command = {
-            "fsum": r"\sum",
-            "sum": r"\sum",
-            "prod": r"\prod",
+            "fsum": "sum",
+            "sum": "sum",
+            "prod": "product",
         }[name]
 
         elt, scripts = self._get_sum_prod_info(node.args[0])
-        scripts_str = [rf"{command}_{{{lo}}}^{{{up}}}" for lo, up in scripts]
-        return (
-            " ".join(scripts_str)
-            + rf" \mathopen{{}}\left({{{elt}}}\mathclose{{}}\right)"
-        )
+        scripts_str = [rf"{command}_({lo})^({up})" for lo, up in scripts]
+        return " ".join(scripts_str) + f" ({elt})"
 
     def _generate_matrix(self, node: ast.Call) -> str | None:
         """Generates matrix expression.
@@ -148,8 +133,8 @@ class ExpressionCodegen(ast.NodeVisitor):
 
         def generate_matrix_from_array(data: list[list[str]]) -> str:
             """Helper to generate a bmatrix environment."""
-            contents = r" \\ ".join(" & ".join(row) for row in data)
-            return r"\begin{bmatrix} " + contents + r" \end{bmatrix}"
+            contents = "; ".join(", ".join(row) for row in data)
+            return 'mat(delim:"[", ' + contents + " )"
 
         arg = node.args[0]
         if not isinstance(arg, ast.List) or not arg.elts:
@@ -202,15 +187,15 @@ class ExpressionCodegen(ast.NodeVisitor):
             if len(dims) == 1:
                 dims = [1, dims[0]]
 
-            dims_latex = r" \times ".join(str(x) for x in dims)
+            dims_latex = " times ".join(str(x) for x in dims)
         else:
             dim = ast_utils.extract_int_or_none(node.args[0])
             if not isinstance(dim, int):
                 return None
             # 1 x N array of zeros
-            dims_latex = rf"1 \times {dim}"
+            dims_latex = f"1 times {dim}"
 
-        return rf"\mathbf{{0}}^{{{dims_latex}}}"
+        return f"bold(0)^({dims_latex})"
 
     def _generate_identity(self, node: ast.Call) -> str | None:
         """Generates LaTeX for numpy.identity.
@@ -229,7 +214,7 @@ class ExpressionCodegen(ast.NodeVisitor):
         if ndims is None:
             return None
 
-        return rf"\mathbf{{I}}_{{{ndims}}}"
+        return f"bold(I)_({ndims})"
 
     def _generate_transpose(self, node: ast.Call) -> str | None:
         """Generates LaTeX for numpy.transpose.
@@ -248,7 +233,7 @@ class ExpressionCodegen(ast.NodeVisitor):
 
         func_arg = node.args[0]
         if isinstance(func_arg, ast.Name):
-            return rf"\mathbf{{{func_arg.id}}}^\intercal"
+            return f"bold({func_arg.id})^T"
         else:
             return None
 
@@ -264,18 +249,19 @@ class ExpressionCodegen(ast.NodeVisitor):
         name = ast_utils.extract_function_name_or_none(node)
         assert name == "det"
 
-        if len(node.args) != 1:
-            return None
+        if len(node.args) == 0:
+            return "det ( )"
+        elif len(node.args) == 1:
+            func_arg = node.args[0]
+            if isinstance(func_arg, ast.Name):
+                arg_id = f"bold({func_arg.id})"
+                return f"det ( {arg_id} )"
+            elif isinstance(func_arg, ast.List):
+                matrix = self._generate_matrix(node)
+                return f"det ( {matrix} )"
 
-        func_arg = node.args[0]
-        if isinstance(func_arg, ast.Name):
-            arg_id = rf"\mathbf{{{func_arg.id}}}"
-            return rf"\det \mathopen{{}}\left( {arg_id} \mathclose{{}}\right)"
-        elif isinstance(func_arg, ast.List):
-            matrix = self._generate_matrix(node)
-            return rf"\det \mathopen{{}}\left( {matrix} \mathclose{{}}\right)"
-
-        return None
+        args_str = ", ".join(self.visit(a) for a in node.args)
+        return f"det ( {args_str} )"
 
     def _generate_matrix_rank(self, node: ast.Call) -> str | None:
         """Generates LaTeX for numpy.linalg.matrix_rank.
@@ -294,15 +280,11 @@ class ExpressionCodegen(ast.NodeVisitor):
 
         func_arg = node.args[0]
         if isinstance(func_arg, ast.Name):
-            arg_id = rf"\mathbf{{{func_arg.id}}}"
-            return (
-                rf"\mathrm{{rank}} \mathopen{{}}\left( {arg_id} \mathclose{{}}\right)"
-            )
+            arg_id = f"bold({func_arg.id})"
+            return f'op("rank") ( {arg_id} )'
         elif isinstance(func_arg, ast.List):
             matrix = self._generate_matrix(node)
-            return (
-                rf"\mathrm{{rank}} \mathopen{{}}\left( {matrix} \mathclose{{}}\right)"
-            )
+            return f'op("rank") ( {matrix} )'
 
         return None
 
@@ -331,11 +313,11 @@ class ExpressionCodegen(ast.NodeVisitor):
             else:
                 power = power_arg.n
             if isinstance(func_arg, ast.Name):
-                return rf"\mathbf{{{func_arg.id}}}^{{{power}}}"
+                return f"bold({func_arg.id})^({power})"
             elif isinstance(func_arg, ast.List):
                 matrix = self._generate_matrix(node)
                 if matrix is not None:
-                    return rf"{matrix}^{{{power}}}"
+                    return f"{matrix}^({power})"
         return None
 
     def _generate_inv(self, node: ast.Call) -> str | None:
@@ -355,9 +337,9 @@ class ExpressionCodegen(ast.NodeVisitor):
 
         func_arg = node.args[0]
         if isinstance(func_arg, ast.Name):
-            return rf"\mathbf{{{func_arg.id}}}^{{-1}}"
+            return f"bold({func_arg.id})^(-1)"
         elif isinstance(func_arg, ast.List):
-            return rf"{self._generate_matrix(node)}^{{-1}}"
+            return f"{self._generate_matrix(node)}^(-1)"
         return None
 
     def _generate_pinv(self, node: ast.Call) -> str | None:
@@ -377,9 +359,9 @@ class ExpressionCodegen(ast.NodeVisitor):
 
         func_arg = node.args[0]
         if isinstance(func_arg, ast.Name):
-            return rf"\mathbf{{{func_arg.id}}}^{{+}}"
+            return f"bold({func_arg.id})^(+)"
         elif isinstance(func_arg, ast.List):
-            return rf"{self._generate_matrix(node)}^{{+}}"
+            return f"{self._generate_matrix(node)}^(+)"
         return None
 
     def visit_Call(self, node: ast.Call) -> str:
@@ -422,7 +404,10 @@ class ExpressionCodegen(ast.NodeVisitor):
         )
 
         if rule is None:
-            rule = expression_rules.FunctionRule(self.visit(node.func))
+            func_name_str = self.visit(node.func)
+            if func_name_str.startswith('"'):
+                func_name_str = f"op({func_name_str})"
+            rule = expression_rules.FunctionRule(func_name_str)
 
         if rule.is_unary and len(node.args) == 1:
             # Unary function. Applies the same wrapping policy with the unary operators.
@@ -448,13 +433,7 @@ class ExpressionCodegen(ast.NodeVisitor):
             if rule.is_wrapped:
                 elements = [rule.left, arg_latex, rule.right]
             else:
-                elements = [
-                    rule.left,
-                    r"\mathopen{}\left(",
-                    arg_latex,
-                    r"\mathclose{}\right)",
-                    rule.right,
-                ]
+                elements = [rule.left, "(", arg_latex, ")", rule.right]
 
         return " ".join(x for x in elements if x)
 
@@ -515,7 +494,7 @@ class ExpressionCodegen(ast.NodeVisitor):
         child_prec = expression_rules.get_precedence(child)
 
         if force_wrap or child_prec < parent_prec:
-            return rf"\mathopen{{}}\left( {latex} \mathclose{{}}\right)"
+            return f"( {latex} )"
 
         return latex
 
@@ -563,11 +542,11 @@ class ExpressionCodegen(ast.NodeVisitor):
         ):
             return latex
 
-        return rf"\mathopen{{}}\left( {latex} \mathclose{{}}\right)"
+        return f"( {latex} )"
 
-    _l_bracket_pattern = re.compile(r"^\\mathopen.*")
-    _r_bracket_pattern = re.compile(r".*\\mathclose[^ ]+$")
-    _r_word_pattern = re.compile(r"\\mathrm\{[^ ]+\}$")
+    _l_bracket_pattern = re.compile(r"^\(.*")
+    _r_bracket_pattern = re.compile(r".*\)$")
+    _r_word_pattern = re.compile(r'"[^ ]+"$')
 
     def _should_remove_multiply_op(
         self, l_latex: str, r_latex: str, l_expr: ast.expr, r_expr: ast.expr
@@ -612,7 +591,7 @@ class ExpressionCodegen(ast.NodeVisitor):
             r_type = "f"
         elif self._l_bracket_pattern.match(r_latex):
             r_type = "b"
-        elif r_latex.startswith("\\mathrm"):
+        elif r_latex.startswith('"'):
             r_type = "w"
         elif r_latex[0].isnumeric():
             r_type = "n"
@@ -680,18 +659,18 @@ class ExpressionCodegen(ast.NodeVisitor):
 
     def visit_IfExp(self, node: ast.IfExp) -> str:
         """Visit an IfExp node"""
-        latex = r"\left\{ \begin{array}{ll} "
+        latex = "cases( "
 
         current_expr: ast.expr = node
 
         while isinstance(current_expr, ast.IfExp):
             cond_latex = self.visit(current_expr.test)
             true_latex = self.visit(current_expr.body)
-            latex += true_latex + r", & \mathrm{if} \ " + cond_latex + r" \\ "
+            latex += true_latex + ' ","& "if" ' + cond_latex + ", "
             current_expr = current_expr.orelse
 
         latex += self.visit(current_expr)
-        return latex + r", & \mathrm{otherwise} \end{array} \right."
+        return latex + ' ","& "otherwise" )'
 
     def _get_sum_prod_range(self, node: ast.comprehension) -> tuple[str, str] | None:
         """Helper to process range(...) for sum and prod functions.
@@ -815,4 +794,4 @@ class ExpressionCodegen(ast.NodeVisitor):
         # "[i][j][...]" may be a possible representation as well as "i, j. ..."
         indices_str = ", ".join(indices)
 
-        return f"{value}_{{{indices_str}}}"
+        return f"{value}_({indices_str})"

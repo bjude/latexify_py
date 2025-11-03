@@ -19,7 +19,7 @@ from latexify.codegen.codegen_utils import convert_constant
         (123, "123"),
         (456.789, "456.789"),
         (-3 + 4j, "(-3+4j)"),
-        ("string", "quote[string]"),
+        ("string", "#quote[string]"),
         (..., "dots.c"),
     ],
 )

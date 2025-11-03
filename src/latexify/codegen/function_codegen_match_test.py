@@ -25,7 +25,7 @@ def test_functiondef_match() -> None:
             """
         )
     )
-    expected = 'f(x) = cases(1 ","& "if" x = 0, 3 x ","& "otherwise" )'
+    expected = 'f(x) = cases( 1 ","& "if" x = 0, 3 x ","& "otherwise" )'
     assert function_codegen.FunctionCodegen().visit(tree) == expected
 
 
@@ -42,7 +42,7 @@ def test_matchvalue() -> None:
             """
         )
     ).body[0]
-    expected = 'f(x) = cases(1 ","& "if" x = 0, 2 ","& "otherwise" )'
+    expected = 'cases( 1 ","& "if" x = 0, 2 ","& "otherwise" )'
     assert function_codegen.FunctionCodegen().visit(tree) == expected
 
 
@@ -61,7 +61,7 @@ def test_multiple_matchvalue() -> None:
             """
         )
     ).body[0]
-    expected = 'f(x) = cases(1 ","& "if" x = 0, 2 ","& "if" x = 1, 3 ","& "otherwise" )'
+    expected = 'cases( 1 ","& "if" x = 0, 2 ","& "if" x = 1, 3 ","& "otherwise" )'
     assert function_codegen.FunctionCodegen().visit(tree) == expected
 
 

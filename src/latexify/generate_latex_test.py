@@ -110,7 +110,7 @@ def test_get_latex_use_set_symbols() -> None:
     def f(x, y):
         return x & y
 
-    latex_without_flag = 'f(x, y) = x op("&") y'
+    latex_without_flag = 'f(x, y) = x op(&) y'
     latex_with_flag = "f(x, y) = x inter y"
 
     assert generate_latex.get_latex(f) == latex_without_flag

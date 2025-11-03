@@ -11,7 +11,7 @@ def test_quadratic_solution() -> None:
     def solve(a, b, c):
         return (-b + math.sqrt(b**2 - 4 * a * c)) / (2 * a)
 
-    latex = 'op("solve")( a, b, c ) = frac(-b + sqrt( b^(2) - 4 a c ), 2 a)'
+    latex = 'op("solve")(a, b, c) = frac(-b + sqrt( b^(2) - 4 a c ), 2 a)'
     integration_utils.check_function(solve, latex)
 
 
@@ -23,7 +23,7 @@ def test_sinc() -> None:
             return math.sin(x) / x
 
     latex = (
-        'op("sinc")( x ) = cases( 1 ","& "if" x = 0, frac(sin x, x) ","& "otherwise" )'
+        'op("sinc")(x) = cases( 1 ","& "if" x = 0, frac(sin x, x) ","& "otherwise" )'
     )
     integration_utils.check_function(sinc, latex)
 
@@ -32,13 +32,13 @@ def test_x_times_beta() -> None:
     def xtimesbeta(x, beta):
         return x * beta
 
-    latex_without_symbols = 'op("xtimesbeta")( x, "beta" ) = x dot "beta"'
+    latex_without_symbols = 'op("xtimesbeta")(x, "beta") = x dot.op "beta"'
     integration_utils.check_function(xtimesbeta, latex_without_symbols)
     integration_utils.check_function(
         xtimesbeta, latex_without_symbols, use_math_symbols=False
     )
 
-    latex_with_symbols = 'op("xtimesbeta")( x, beta ) = x beta'
+    latex_with_symbols = 'op("xtimesbeta")(x, beta) = x beta'
     integration_utils.check_function(
         xtimesbeta, latex_with_symbols, use_math_symbols=True
     )
@@ -48,7 +48,7 @@ def test_sum_with_limit_1arg() -> None:
     def sum_with_limit(n):
         return sum(i**2 for i in range(n))
 
-    latex = 'op("sum_with_limit")( n ) = sum_(i = 0)^(n - 1) (i^2)'
+    latex = 'op("sum_with_limit")(n) = sum_(i = 0)^(n - 1) (i^(2))'
     integration_utils.check_function(sum_with_limit, latex)
 
 
@@ -56,7 +56,7 @@ def test_sum_with_limit_2args() -> None:
     def sum_with_limit(a, n):
         return sum(i**2 for i in range(a, n))
 
-    latex = 'op("sum_with_limit")( a, n ) = sum_(i = 0)^(n - 1) (i^2)'
+    latex = 'op("sum_with_limit")(a, n) = sum_(i = a)^(n - 1) (i^(2))'
     integration_utils.check_function(sum_with_limit, latex)
 
 
@@ -64,7 +64,7 @@ def test_sum_with_reducible_limit() -> None:
     def sum_with_limit(n):
         return sum(i for i in range(n + 1))
 
-    latex = 'op("sum_with_limit")( n ) = sum_(i = 0)^(n) (i)'
+    latex = 'op("sum_with_limit")(n) = sum_(i = 0)^(n) (i)'
     integration_utils.check_function(sum_with_limit, latex)
 
 
@@ -72,7 +72,7 @@ def test_sum_with_irreducible_limit() -> None:
     def sum_with_limit(n):
         return sum(i for i in range(n * 3))
 
-    latex = 'op("sum_with_limit")( n ) = sum_(i = 0)^(n dot.op 3 - 1) (i)'
+    latex = 'op("sum_with_limit")(n) = sum_(i = 0)^(n dot.op 3 - 1) (i)'
     integration_utils.check_function(sum_with_limit, latex)
 
 
@@ -80,7 +80,7 @@ def test_prod_with_limit_1arg() -> None:
     def prod_with_limit(n):
         return math.prod(i**2 for i in range(n))
 
-    latex = 'op("prod_with_limit")( n ) = product_(i = 0)^(n - 1) (i^2)'
+    latex = 'op("prod_with_limit")(n) = product_(i = 0)^(n - 1) (i^(2))'
     integration_utils.check_function(prod_with_limit, latex)
 
 
@@ -88,7 +88,7 @@ def test_prod_with_limit_2args() -> None:
     def prod_with_limit(a, n):
         return math.prod(i**2 for i in range(a, n))
 
-    latex = 'op("prod_with_limit")( a, n ) = product_(i = a)^(n - 1) (i^2)'
+    latex = 'op("prod_with_limit")(a, n) = product_(i = a)^(n - 1) (i^(2))'
     integration_utils.check_function(prod_with_limit, latex)
 
 
@@ -96,7 +96,7 @@ def test_prod_with_reducible_limits() -> None:
     def prod_with_limit(n):
         return math.prod(i for i in range(n - 1))
 
-    latex = 'op("prod_with_limit")( a, n ) = product_(i = 0)^(n - 2) (i)'
+    latex = 'op("prod_with_limit")(n) = product_(i = 0)^(n - 2) (i)'
     integration_utils.check_function(prod_with_limit, latex)
 
 
@@ -104,7 +104,7 @@ def test_prod_with_irreducible_limit() -> None:
     def prod_with_limit(n):
         return math.prod(i for i in range(n * 3))
 
-    latex = 'op("prod_with_limit")( n ) = product_(i = 0)^(n dot.op 3 - 1) (i)'
+    latex = 'op("prod_with_limit")(n) = product_(i = 0)^(n dot.op 3 - 1) (i)'
     integration_utils.check_function(prod_with_limit, latex)
 
 
@@ -112,7 +112,7 @@ def test_nested_function() -> None:
     def nested(x):
         return 3 * x
 
-    integration_utils.check_function(nested, 'op("nested")( x ) = 3 x')
+    integration_utils.check_function(nested, 'op("nested")(x) = 3 x')
 
 
 def test_double_nested_function() -> None:
@@ -122,7 +122,7 @@ def test_double_nested_function() -> None:
 
         return inner
 
-    integration_utils.check_function(nested(3), 'op("inner")( y ) = x y')
+    integration_utils.check_function(nested(3), 'op("inner")(y) = x y')
 
 
 def test_reduce_assignments() -> None:
@@ -130,8 +130,8 @@ def test_reduce_assignments() -> None:
         a = x + x
         return 3 * a
 
-    integration_utils.check_function(f, r"a = x + x \ f(x) = 3 a")
-    integration_utils.check_function(f, "f( x ) = 3 ( x + x )", reduce_assignments=True)
+    integration_utils.check_function(f, "a = x + x \\ f(x) = 3 a")
+    integration_utils.check_function(f, "f(x) = 3 ( x + x )", reduce_assignments=True)
 
 
 def test_reduce_assignments_double() -> None:
@@ -140,12 +140,12 @@ def test_reduce_assignments_double() -> None:
         b = a + a
         return 3 * b
 
-    latex_without_option = " a = x^(2) \\ b = a + a \\ f(x) = 3 b"
+    latex_without_option = "a = x^(2) \\ b = a + a \\ f(x) = 3 b"
 
     integration_utils.check_function(f, latex_without_option)
     integration_utils.check_function(f, latex_without_option, reduce_assignments=False)
     integration_utils.check_function(
-        f, "f( x ) = 3 ( x^(2) + x^(2) )", reduce_assignments=True
+        f, "f(x) = 3 ( x^(2) + x^(2) )", reduce_assignments=True
     )
 
 
@@ -161,7 +161,7 @@ def test_reduce_assignments_with_if() -> None:
     integration_utils.check_function(
         sigmoid,
         (
-            'op("sigmoid")( x ) = cases('
+            'op("sigmoid")(x) = cases('
             ' frac(1, 1 + exp ( -x )) ","&'
             ' "if" x > 0,'
             ' frac(exp x, exp x + 1) ","&'
@@ -175,7 +175,7 @@ def test_sub_bracket() -> None:
     def solve(a, b):
         return ((a + b) - b) / (a - b) - (a + b) - (a - b) - (a * b)
 
-    latex = 'op("solve")( a, b ) = frac(a + b - b, a - b) - ( a + b ) - ( a - b ) - a b'
+    latex = 'op("solve")(a, b) = frac(a + b - b, a - b) - ( a + b ) - ( a - b ) - a b'
     integration_utils.check_function(solve, latex)
 
 
@@ -184,7 +184,7 @@ def test_docstring_allowed() -> None:
         """The identity function."""
         return x
 
-    latex = 'op("solve")( x ) = x'
+    latex = 'op("solve")(x) = x'
     integration_utils.check_function(solve, latex)
 
 
@@ -195,5 +195,5 @@ def test_multiple_constants_allowed() -> None:
         True
         return x
 
-    latex = 'op("solve")( x ) = x'
+    latex = 'op("solve")(x) = x'
     integration_utils.check_function(solve, latex)

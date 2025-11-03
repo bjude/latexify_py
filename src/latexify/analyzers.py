@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import copy
 import dataclasses
 import sys
 
@@ -65,6 +66,48 @@ def analyze_range(node: ast.Call) -> RangeInfo:
     )
 
 
+class ConstantFolder(ast.NodeTransformer):
+    def visit_BinOp(self, node: ast.BinOp) -> ast.BinOp | ast.Constant:
+        match node:
+            case ast.BinOp(_, ast.Sub(), ast.UnaryOp(ast.USub())):
+                node.op = ast.Add()
+                node.right = node.right.operand
+                return node
+        left = self.visit(node.left)
+        right = self.visit(node.right)
+        if isinstance(left, ast.Constant) and isinstance(right, ast.Constant):
+            match node.op:
+                case ast.Add():
+                    return ast.Constant(left.value + right.value)
+                case ast.Sub():
+                    return ast.Constant(left.value - right.value)
+                case ast.Mult():
+                    return ast.Constant(left.value * right.value)
+                case ast.Div():
+                    return ast.Constant(left.value / right.value)
+                case ast.FloorDiv():
+                    return ast.Constant(left.value // right.value)
+                case ast.Mod():
+                    return ast.Constant(left.value % right.value)
+                case ast.LShift():
+                    return ast.Constant(left.value << right.value)
+                case ast.RShift():
+                    return ast.Constant(left.value >> right.value)
+        node.left = left
+        node.right = right
+        return node
+
+    def visit_UnaryOp(self, node: ast.UnaryOp) -> ast.UnaryOp | ast.Constant:
+        operand = self.visit(node.operand)
+        if isinstance(operand, ast.Constant):
+            match node.op:
+                case ast.USub():
+                    operand.value = -operand.value
+                    return operand
+        node.operand = operand
+        return node
+
+
 def reduce_stop_parameter(node: ast.expr) -> ast.expr:
     """Adjusts the stop expression of the range.
 
@@ -79,6 +122,9 @@ def reduce_stop_parameter(node: ast.expr) -> ast.expr:
     Returns:
         Converted expression.
     """
+    node = ConstantFolder().visit(copy.deepcopy(node))
+    if isinstance(node, ast.Constant):
+        return ast_utils.make_constant(node.value - 1)
     if not (isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Sub))):
         return ast.BinOp(left=node, op=ast.Sub(), right=ast_utils.make_constant(1))
 

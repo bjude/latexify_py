@@ -20,7 +20,7 @@ def convert_constant(value: Any, sig_figs: int | None = None) -> str:
         The LaTeX representation of `value`.
     """
     if value is None or isinstance(value, bool):
-        return r"\mathrm{" + str(value) + "}"
+        return '"' + str(value) + '"'
     if isinstance(value, int):
         return str(value)
     if isinstance(value, (float, complex)):
@@ -29,11 +29,11 @@ def convert_constant(value: Any, sig_figs: int | None = None) -> str:
             return format_float(value, sig_figs)
         return str(value)
     if isinstance(value, str):
-        return r'\textrm{"' + value + '"}'
+        return "#quote[" + str(value) + "]"
     if isinstance(value, bytes):
-        return r"\textrm{" + str(value) + "}"
+        return "b#quote[" + value.decode() + "]"
     if value is ...:
-        return r"\cdots"
+        return "dots.c"
     raise exceptions.LatexifyNotSupportedError(
         f"Unrecognized constant: {type(value).__name__}"
     )

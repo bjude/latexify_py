@@ -62,7 +62,7 @@ class FunctionCodegen(ast.NodeVisitor):
     def visit_FunctionDef(self, node: ast.FunctionDef) -> str:
         """Visit a FunctionDef node."""
         # Function name
-        name_str = self._identifier_converter.convert(node.name)[0]
+        name_str, is_single = self._identifier_converter.convert(node.name)
 
         # Arguments
         arg_strs = [
@@ -97,7 +97,7 @@ class FunctionCodegen(ast.NodeVisitor):
                 )
 
         # Function signature: f(x, ...)
-        signature_str = name_str
+        signature_str = name_str if is_single else f"op({name_str})"
         if len(arg_strs) > 0:
             signature_str += "(" + ", ".join(arg_strs) + ")"
 
@@ -112,7 +112,7 @@ class FunctionCodegen(ast.NodeVisitor):
 
         # Definition with several assignments. Wrap all statements with array.
         body_strs.append(return_str)
-        return r"\begin{array}{l} " + r" \\ ".join(body_strs) + r" \end{array}"
+        return " \\ ".join(body_strs)
 
     def visit_Assign(self, node: ast.Assign) -> str:
         """Visit an Assign node."""
@@ -130,7 +130,7 @@ class FunctionCodegen(ast.NodeVisitor):
 
     def visit_If(self, node: ast.If) -> str:
         """Visit an If node."""
-        latex = r"\left\{ \begin{array}{ll} "
+        latex = "cases( "
 
         current_stmt: ast.stmt = node
 
@@ -142,11 +142,11 @@ class FunctionCodegen(ast.NodeVisitor):
 
             cond_latex = self._expression_codegen.visit(current_stmt.test)
             true_latex = self.visit(current_stmt.body[0])
-            latex += true_latex + r", & \mathrm{if} \ " + cond_latex + r" \\ "
+            latex += true_latex + ' ","& "if" ' + cond_latex + ", "
             current_stmt = current_stmt.orelse[0]
 
         latex += self.visit(current_stmt)
-        return latex + r", & \mathrm{otherwise} \end{array} \right."
+        return latex + ' ","& "otherwise" )'
 
     def visit_Match(self, node: ast.Match) -> str:
         """Visit a Match node"""
@@ -172,18 +172,14 @@ class FunctionCodegen(ast.NodeVisitor):
                 body_latex = self.visit(case.body[0])
                 cond_latex = self.visit(case.pattern)
                 case_latexes.append(
-                    body_latex + r", & \mathrm{if} \ " + subject_latex + cond_latex
+                    body_latex + ' ","& "if" ' + subject_latex + cond_latex
                 )
             else:
                 case_latexes.append(
-                    self.visit(node.cases[-1].body[0]) + r", & \mathrm{otherwise}"
+                    self.visit(node.cases[-1].body[0]) + ' ","& "otherwise"'
                 )
 
-        return (
-            r"\left\{ \begin{array}{ll} "
-            + r" \\ ".join(case_latexes)
-            + r" \end{array} \right."
-        )
+        return "cases( " + ", ".join(case_latexes) + " )"
 
     def visit_MatchValue(self, node: ast.MatchValue) -> str:
         """Visit a MatchValue node"""
