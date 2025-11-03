@@ -846,6 +846,12 @@ def test_pinv(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "left,right,latex",
     [
+        ("2", "-3", "2 dot.op -3"),
+        ("2", "-y", "2 dot.op -y"),
+        ("2", "-beta", "2 dot.op -beta"),
+        ("2", "-bar", '2 dot.op -"bar"'),
+        ("2", "-g(y)", "2 dot.op -g ( y )"),
+        ("2", "-(u + v)", "2 dot.op -( u + v )"),
         ("2", "3", "2 dot.op 3"),
         ("2", "y", "2 y"),
         ("2", "beta", "2 beta"),
