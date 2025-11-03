@@ -646,16 +646,16 @@ def test_visit_compare_use_set_symbols(code: str, latex: str) -> None:
     [
         ("array(1)", 'op("array") ( 1 )'),
         ("array([])", 'op("array") ( [  ] )'),
-        ("array([1])", 'mat(delim:"[", 1 )'),
-        ("array([1, 2, 3])", 'mat(delim:"[", 1, 2, 3 )'),
+        ("array([1])", 'mat(delim:"[", 1)'),
+        ("array([1, 2, 3])", 'mat(delim:"[", 1, 2, 3)'),
         ("array([[]])", 'op("array") ( [ [  ] ] )'),
-        ("array([[1]])", 'mat(delim:"[", 1 )'),
-        ("array([[1], [2], [3]])", 'mat(delim:"[", 1; 2; 3 )'),
+        ("array([[1]])", 'mat(delim:"[", 1)'),
+        ("array([[1], [2], [3]])", 'mat(delim:"[", 1; 2; 3)'),
         ("array([[1], [2], [3, 4]])", 'op("array") ( [ [ 1 ], [ 2 ], [ 3, 4 ] ] )'),
-        ("array([[1, 2], [3, 4], [5, 6]])", 'mat(delim:"[", 1, 2; 3, 4; 5, 6 )'),
+        ("array([[1, 2], [3, 4], [5, 6]])", 'mat(delim:"[", 1, 2; 3, 4; 5, 6)'),
         # Only checks two cases for ndarray.
         ("ndarray(1)", 'op("ndarray") ( 1 )'),
-        ("ndarray([1])", 'mat(delim:"[", 1 )'),
+        ("ndarray([1])", 'mat(delim:"[", 1)'),
     ],
 )
 def test_numpy_array(code: str, latex: str) -> None:
@@ -731,17 +731,17 @@ def test_transpose(code: str, latex: str) -> None:
 @pytest.mark.parametrize(
     "code,latex",
     [
-        ("det(A)", "det ( bold(A) )"),
-        ("det(b)", "det ( bold(b) )"),
-        ("det([[1, 2], [3, 4]])", 'det ( mat(delim:"[", 1, 2; 3, 4 ) )'),
+        ("det(A)", "det( bold(A) )"),
+        ("det(b)", "det( bold(b) )"),
+        ("det([[1, 2], [3, 4]])", 'det( mat(delim:"[", 1, 2; 3, 4) )'),
         (
             "det([[1, 2, 3], [4, 5, 6], [7, 8, 9]])",
-            'det ( mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9 ) )',
+            'det( mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9) )',
         ),
         # Unsupported
-        ("det()", "det ( )"),
-        ("det(2)", "det ( 2 )"),
-        ("det(a, (1, 0))", "det ( a, ( 1, 0 ) )"),
+        ("det()", "det( )"),
+        ("det(2)", "det( 2 )"),
+        ("det(a, (1, 0))", "det( a, ( 1, 0 ) )"),
     ],
 )
 def test_determinant(code: str, latex: str) -> None:
@@ -755,10 +755,10 @@ def test_determinant(code: str, latex: str) -> None:
     [
         ("matrix_rank(A)", 'op("rank") ( bold(A) )'),
         ("matrix_rank(b)", 'op("rank") ( bold(b) )'),
-        ("matrix_rank([[1, 2], [3, 4]])", 'op("rank") ( mat(delim:"[", 1, 2; 3, 4 ) )'),
+        ("matrix_rank([[1, 2], [3, 4]])", 'op("rank") ( mat(delim:"[", 1, 2; 3, 4) )'),
         (
             "matrix_rank([[1, 2, 3], [4, 5, 6], [7, 8, 9]])",
-            'op("rank") ( mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9 ) )',
+            'op("rank") ( mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9) )',
         ),
         # Unsupported
         ("matrix_rank()", 'op("matrix_rank") ( )'),
@@ -777,10 +777,10 @@ def test_matrix_rank(code: str, latex: str) -> None:
     [
         ("matrix_power(A, 2)", "bold(A)^(2)"),
         ("matrix_power(b, 2)", "bold(b)^(2)"),
-        ("matrix_power([[1, 2], [3, 4]], 2)", 'mat(delim:"[", 1, 2; 3, 4 )^(2)'),
+        ("matrix_power([[1, 2], [3, 4]], 2)", 'mat(delim:"[", 1, 2; 3, 4)^(2)'),
         (
             "matrix_power([[1, 2, 3], [4, 5, 6], [7, 8, 9]], 42)",
-            'mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9 )^(42)',
+            'mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9)^(42)',
         ),
         # Unsupported
         ("matrix_power()", 'op("matrix_power") ( )'),
@@ -801,11 +801,11 @@ def test_matrix_power(code: str, latex: str) -> None:
         ("inv(b)", "bold(b)^(-1)"),
         (
             "inv([[1, 2], [3, 4]])",
-            'mat(delim:"[", 1, 2; 3, 4 )^(-1)',
+            'mat(delim:"[", 1, 2; 3, 4)^(-1)',
         ),
         (
             "inv([[1, 2, 3], [4, 5, 6], [7, 8, 9]])",
-            'mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9 )^(-1)',
+            'mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9)^(-1)',
         ),
         # Unsupported
         ("inv()", 'op("inv") ( )'),
@@ -824,10 +824,10 @@ def test_inv(code: str, latex: str) -> None:
     [
         ("pinv(A)", "bold(A)^(+)"),
         ("pinv(b)", "bold(b)^(+)"),
-        ("pinv([[1, 2], [3, 4]])", 'mat(delim:"[", 1, 2; 3, 4 )^(+)'),
+        ("pinv([[1, 2], [3, 4]])", 'mat(delim:"[", 1, 2; 3, 4)^(+)'),
         (
             "pinv([[1, 2, 3], [4, 5, 6], [7, 8, 9]])",
-            'mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9 )^(+)',
+            'mat(delim:"[", 1, 2, 3; 4, 5, 6; 7, 8, 9)^(+)',
         ),
         # Unsupported
         ("pinv()", 'op("pinv") ( )'),
@@ -882,6 +882,11 @@ def test_pinv(code: str, latex: str) -> None:
         ("(s + t)", "bar", '( s + t ) "bar"'),
         ("(s + t)", "g(y)", "( s + t ) g ( y )"),
         ("(s + t)", "(u + v)", "( s + t ) ( u + v )"),
+        (
+            "np.array([[a, b], [c, d]]) @ np.array([[1, 2], [3, 4]])",
+            "np.array([[1, 2], [3, 4]])",
+            'mat(delim:"[", a, b; c, d) dot.op mat(delim:"[", 1, 2; 3, 4) dot.op mat(delim:"[", 1, 2; 3, 4)',
+        ),
     ],
 )
 def test_remove_multiply(left: str, right: str, latex: str) -> None:

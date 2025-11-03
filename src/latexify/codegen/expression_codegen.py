@@ -134,7 +134,7 @@ class ExpressionCodegen(ast.NodeVisitor):
         def generate_matrix_from_array(data: list[list[str]]) -> str:
             """Helper to generate a bmatrix environment."""
             contents = "; ".join(", ".join(row) for row in data)
-            return 'mat(delim:"[", ' + contents + " )"
+            return 'mat(delim:"[", ' + contents + ")"
 
         arg = node.args[0]
         if not isinstance(arg, ast.List) or not arg.elts:
@@ -250,18 +250,18 @@ class ExpressionCodegen(ast.NodeVisitor):
         assert name == "det"
 
         if len(node.args) == 0:
-            return "det ( )"
+            return "det( )"
         elif len(node.args) == 1:
             func_arg = node.args[0]
             if isinstance(func_arg, ast.Name):
                 arg_id = f"bold({func_arg.id})"
-                return f"det ( {arg_id} )"
+                return f"det( {arg_id} )"
             elif isinstance(func_arg, ast.List):
                 matrix = self._generate_matrix(node)
-                return f"det ( {matrix} )"
+                return f"det( {matrix} )"
 
         args_str = ", ".join(self.visit(a) for a in node.args)
-        return f"det ( {args_str} )"
+        return f"det( {args_str} )"
 
     def _generate_matrix_rank(self, node: ast.Call) -> str | None:
         """Generates LaTeX for numpy.linalg.matrix_rank.
@@ -563,10 +563,23 @@ class ExpressionCodegen(ast.NodeVisitor):
 
         # NOTE(odashi): For compatibility with Python 3.7, we compare the generated
         # caracter type directly to determine the "numeric" type.
+        def l_is_bracketed():
+            if not self._r_bracket_pattern.match(l_latex):
+                return False
+            open_count = 0
+            # Count backwards until we get to the matching  bracket
+            for match in reversed(list(re.finditer("[()]", l_latex))):
+                if match.group() == ")":
+                    open_count += 1
+                elif match.group() == "(":
+                    open_count -= 1
+                if open_count == 0:
+                    break
+            return match.start() == 0 or l_latex[match.start() - 1] == " "
 
         if isinstance(l_expr, ast.Call):
             l_type = "f"
-        elif self._r_bracket_pattern.match(l_latex):
+        elif l_is_bracketed():
             l_type = "b"
         elif self._r_word_pattern.match(l_latex):
             l_type = "w"
@@ -596,22 +609,24 @@ class ExpressionCodegen(ast.NodeVisitor):
         elif r_latex[0].isnumeric():
             r_type = "n"
         else:
-            re = r_expr
+            loop_re = r_expr
             while True:
-                if isinstance(re, ast.UnaryOp):
-                    if isinstance(re.op, ast.USub):
+                if isinstance(loop_re, ast.UnaryOp):
+                    if isinstance(loop_re.op, ast.USub):
                         # NOTE(odashi): Unary "-" always require \cdot.
                         return False
-                    re = re.operand
-                elif isinstance(re, ast.BinOp):
-                    re = re.left
-                elif isinstance(re, ast.Compare):
-                    re = re.left
-                elif isinstance(re, ast.BoolOp):
-                    re = re.values[0]
+                    loop_re = loop_re.operand
+                elif isinstance(loop_re, ast.BinOp):
+                    loop_re = loop_re.left
+                elif isinstance(loop_re, ast.Compare):
+                    loop_re = loop_re.left
+                elif isinstance(loop_re, ast.BoolOp):
+                    loop_re = loop_re.values[0]
                 else:
                     break
-            r_type = "a" if isinstance(re, ast.Name) and len(re.id) == 1 else "m"
+            r_type = (
+                "a" if isinstance(r_expr, ast.Name) and len(r_expr.id) == 1 else "m"
+            )
 
         if r_type == "n":
             return False
