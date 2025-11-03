@@ -5,6 +5,8 @@ from __future__ import annotations
 import abc
 from typing import Any, Callable, cast
 
+import typst
+
 from latexify import exceptions, generate_latex
 
 
@@ -46,7 +48,7 @@ class LatexifiedRepr(metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def _repr_latex_(self) -> str | tuple[str, dict[str, Any]] | None:
+    def _repr_svg_(self) -> str | tuple[str, dict[str, Any]] | None:
         """IPython hook to display LaTeX visualization."""
         ...
 
@@ -91,13 +93,13 @@ class LatexifiedAlgorithm(LatexifiedRepr):
             else None
         )
 
-    def _repr_latex_(self) -> str | tuple[str, dict[str, Any]] | None:
+    def _repr_svg_(self) -> str | tuple[str, dict[str, Any]] | None:
         """IPython hook to display LaTeX visualization."""
-        return (
-            f"$ {self._ipython_latex} $"
-            if self._ipython_latex is not None
-            else self._ipython_error
-        )
+        data = f"""
+        ${self._ipython_latex}$
+        """
+        svg_data = typst.compile(data.encode(), format="svg").decode()
+        return svg_data if self._ipython_latex is not None else self._ipython_error
 
 
 class LatexifiedFunction(LatexifiedRepr):
@@ -129,10 +131,10 @@ class LatexifiedFunction(LatexifiedRepr):
             else None
         )
 
-    def _repr_latex_(self) -> str | tuple[str, dict[str, Any]] | None:
+    def _repr_svg_(self) -> str | tuple[str, dict[str, Any]] | None:
         """IPython hook to display LaTeX visualization."""
-        return (
-            rf"$$ \displaystyle {self._latex} $$"
-            if self._latex is not None
-            else self._error
-        )
+        data = f"""
+        ${self._latex}$
+        """
+        svg_data = typst.compile(data.encode(), format="svg").decode()
+        return svg_data if self._latex is not None else self._error
