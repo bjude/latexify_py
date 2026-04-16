@@ -1,3 +1,4 @@
+from dataclasses import is_dataclass, fields
 from typing import Any
 import re
 
@@ -34,6 +35,16 @@ def convert_constant(value: Any, sig_figs: int | None = None) -> str:
         return r"\textrm{" + str(value) + "}"
     if value is ...:
         return r"\cdots"
+    if is_dataclass(value):
+        # Recursively format
+        return (
+            f"{type(value)}("
+            + ", ".join(
+                f"{f.name}={convert_constant(getattr(value, f.name))}"
+                for f in fields(value)
+            )
+            + ")"
+        )
     raise exceptions.LatexifyNotSupportedError(
         f"Unrecognized constant: {type(value).__name__}"
     )
