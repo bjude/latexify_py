@@ -35,6 +35,7 @@ classifiers = [
 ]
 dependencies = [
     "dill>=0.3.2",
+    "typst"
 ]
 dynamic = [
     "version"
