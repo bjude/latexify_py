@@ -26,7 +26,7 @@ def convert_constant(value: Any, sig_figs: int | None = None) -> str:
     if isinstance(value, (float, complex)):
         # TODO(odashi): Support other symbols for the imaginary unit than j.
         if sig_figs is not None:
-            return format_float(value, sig_figs)
+            return f"#num[{value}]"
         return str(value)
     if isinstance(value, str):
         return "#quote[" + str(value) + "]"
