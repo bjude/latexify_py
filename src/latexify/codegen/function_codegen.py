@@ -112,7 +112,7 @@ class FunctionCodegen(ast.NodeVisitor):
 
         # Definition with several assignments. Wrap all statements with array.
         body_strs.append(return_str)
-        return " \\ ".join(body_strs)
+        return r" \\ ".join(body_strs)
 
     def visit_Assign(self, node: ast.Assign) -> str:
         """Visit an Assign node."""
